@@ -1,0 +1,4 @@
+cmd: python manage.py migrate && gunicorn pycd.wsgi --config config.py -b 0.0.0.0:8000
+worker: python manage.py celery worker -O fair -l DEBUG
+beat: python manage.py celery beat -S djcelery.schedulers.DatabaseScheduler
+

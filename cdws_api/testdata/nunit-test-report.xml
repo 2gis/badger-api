@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results name="nunit" total="3" errors="0" failures="1" not-run="0" inconclusive="0" ignored="0" skipped="1" invalid="0">
+  <environment nunit-version="2.5.10.11092" clr-version="2.0.50727.5448"/>
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite name="nunit" executed="True" result="Failure" success="False" time="0.732" asserts="0">
+    <results>
+      <test-suite name="nunit" executed="True" result="Failure" success="False" time="0.725" asserts="0">
+        <results>
+          <test-suite name="nunit" executed="True" result="Failure" success="False" time="0.725" asserts="0">
+            <results>
+              <test-suite name="nunit" executed="True" result="Failure" success="False" time="0.724" asserts="0">
+                <results>
+                  <test-case name="PassedTest" executed="True" result="Success" success="True" time="0.004" asserts="0">
+                  </test-case>
+                  <test-case name="FailedTest" executed="True" result="Failure" success="False" time="0.028" asserts="0">
+                    <failure>
+                      <message><![CDATA[]]></message>
+                      <stack-trace>
+                        <![CDATA[stack-trace]]>
+                      </stack-trace>
+                    </failure>
+                  </test-case>
+                  <test-case name="SkippedTest" executed="False" result="Ignored">
+                    <reason>
+                      <message><![CDATA[skipped test]]></message>
+                    </reason>
+                  </test-case>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

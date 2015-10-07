@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="test" tests="4" assertions="4" failures="1" errors="1" time="10.0">
+    <testcase name="passedTest" class="Test" time="0.1"/>
+    <testcase name="failedTest" class="Test" time="0.1">
+      <failure>Failure message</failure>
+    </testcase>
+    <testcase name="failedTest" class="Test" time="0.1">
+      <error>Error message</error>
+      <system-out>System-out</system-out>
+    </testcase>
+    <testcase name="skippedTest" class="Test" time="0.1">
+       <skipped>Skipped message</skipped>
+    </testcase>
+  </testsuite>
+</testsuites>
