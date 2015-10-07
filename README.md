@@ -9,7 +9,7 @@ Badger-api is an open source backend service (REST API) for [Badger] (https://gi
 
 Install dependencies:
 ```bash
-   apt-get install -y python python-dev python-pip python-setuptools python-virtualenv python-tox
+   apt-get install -y python3 python3-dev python3-pip python3-setuptools python-virtualenv python-tox
    apt-get install -y libpq-dev libcurl4-openssl-dev libsasl2-dev
 ```
 
@@ -19,13 +19,13 @@ Clone repository:
    cd badger-api
 ```
 
-Install [Vagrant] (https://www.vagrantup.com/) and type:
+Install [Vagrant] (https://www.vagrantup.com/downloads.html), [Docker] (http://docs.docker.com/linux/started/) and type:
 ```bash
    vagrant up
 ```
 *Vagrant will start two Docker containers with postgresql and rabbitmq.*
 
-Install dev requirements and run tests:
+Install requirements and run tests:
 ```bash
    tox
 ```
@@ -33,6 +33,12 @@ Install dev requirements and run tests:
 Activate virtual env:
 ```bash
    source .tox/py34/bin/activate
+```
+
+Install dev requirements and create database model:
+```bash
+   pip install -r dev-requirements.txt
+   honcho run ./manage.py syncdb
 ```
 
 Run api + celery:
