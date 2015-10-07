@@ -19,7 +19,7 @@ Clone repository:
    cd badger-api
 ```
 
-Install [Vagrant] (https://www.vagrantup.com/), [Docker] (https://www.docker.com/) and type:
+Install [Vagrant] (https://www.vagrantup.com/downloads.html), [Docker] (http://docs.docker.com/linux/started/) and type:
 ```bash
    vagrant up
 ```
