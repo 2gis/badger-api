@@ -1,6 +1,8 @@
 language: python
 install:
+  - pip install coveralls
   - pip install tox
 script:
   - tox
-  
+after_success:
+  - coveralls  

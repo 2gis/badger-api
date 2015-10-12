@@ -1,4 +1,4 @@
-# Badger-api [![Build Status](https://travis-ci.org/2gis/badger-api.svg?branch=master)](https://travis-ci.org/2gis/badger-api)
+# Badger-api [![Build Status](https://travis-ci.org/2gis/badger-api.svg?branch=master)](https://travis-ci.org/2gis/badger-api) [![Coverage Status](https://coveralls.io/repos/2gis/badger-api/badge.svg?branch=master&service=github)](https://coveralls.io/github/2gis/badger-api?branch=master)
 Badger-api is an open source backend service (REST API) for [Badger] (https://github.com/2gis/badger) (AngularJS web UI).
 
 # Installation
