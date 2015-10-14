@@ -26,6 +26,8 @@ class TestPlan(models.Model):
     owner = models.ForeignKey(User, default=1)
     filter = models.TextField(_('Started by filter'), default='',
                               blank=True, null=False, max_length=128)
+    description = models.TextField(_('Description'), default='',
+                                   blank=True, null=False)
 
     def __unicode__(self):
         return '{0} -> TestPlan: {1}'.format(self.project, self.name)
