@@ -111,15 +111,20 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
                                 project=project)
         super(TestPlanApiTestCase, self).setUp()
 
-    def _create_testplan(self, name, project_id, hidden=None):
+    def _create_testplan(self, name, project_id,
+                         hidden=None, description=None):
         if hidden is not None:
             data = {'name': name, 'project': project_id, 'hidden': hidden}
+        elif description is not None:
+            data = {'name': name, 'project': project_id,
+                    'description': description}
         else:
             data = {'name': name, 'project': project_id}
         return self._call_rest('post', 'testplans/', data)
 
     def _update_testplan(self, testplan_id, name,
-                         hidden=None, main=None, statistic_filter=None):
+                         hidden=None, main=None,
+                         statistic_filter=None, description=None):
         data = {'name': name}
         if main is not None:
             data['main'] = main
@@ -127,6 +132,8 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
             data['hidden'] = hidden
         if statistic_filter is not None:
             data['filter'] = statistic_filter
+        if description is not None:
+            data['description'] = description
         return self._call_rest('patch',
                                'testplans/{0}/'.format(testplan_id), data)
 
@@ -308,6 +315,29 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
         task = self._call_rest('get', 'tasks/{}/'.format(1))
         self.assertEqual('PENDING', task['status'])
         self.assertEqual(None, task['result'])
+
+    def test_default_description(self):
+        project = Project.objects.get(name='DummyTestProject')
+        data = self._create_testplan('DefaultDescription', project.id)
+        self.assertFalse(data['description'])
+
+    def test_description(self):
+        project = Project.objects.get(name='DummyTestProject')
+        data = self._create_testplan(
+            'DefaultDescription', project.id,
+            description='Testplan description textfield for DummyTestProject')
+        self.assertEqual(data['description'],
+                         'Testplan description textfield for DummyTestProject')
+
+    def test_update_description(self):
+        testplan = TestPlan.objects.get(name='DummyTestPlan')
+        self.assertFalse(testplan.description)
+        data = self._update_testplan(testplan.id, testplan.name,
+                                     description='Update description')
+        self.assertEqual(data['description'], 'Update description')
+        data = self._update_testplan(testplan.id, testplan.name,
+                                     description='')
+        self.assertFalse(data['description'])
 
 
 class LaunchApiTestCase(AbstractEntityApiTestCase):
