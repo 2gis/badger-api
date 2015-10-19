@@ -44,6 +44,7 @@ class Launch(models.Model):
     state = models.IntegerField(_('State'), default=FINISHED)
     tasks = models.TextField(_('Tasks'), default='')
     parameters = models.TextField(_('Parameters'), default='{}')
+    duration = models.FloatField(_('Duration time'), null=True, default=None)
 
     def is_finished(self):
         return self.state == FINISHED

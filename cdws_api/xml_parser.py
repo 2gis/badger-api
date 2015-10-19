@@ -15,13 +15,14 @@ def create_launch(plan_id):
         test_plan_id=plan_id, state=FINISHED,
         started_by='http://{}'.format(socket.getfqdn()),
         finished=datetime.datetime.now())
-    return launch.id
+    return launch
 
 
 class XmlParser:
     buffer = []
     launch_id = None
     buffer_size = 100
+    total_duration = 0
 
     def __init__(self, launch_id):
         self.launch_id = launch_id
@@ -45,6 +46,11 @@ class XmlParser:
                 rc.append(node.data)
         return ''.join(rc)
 
+    def update_duration(self, launch):
+        log.info('Updating total duration for launch {}'.format(launch.id))
+        launch.duration = self.total_duration
+        launch.save()
+
 
 class JunitParser(XmlParser):
     def parse(self, element, path=''):
@@ -64,6 +70,7 @@ class JunitParser(XmlParser):
         result.state = BLOCKED
         result.duration = element.getAttribute('time')
         result.failure_reason = ''
+        self.total_duration += float(result.duration)
 
         error = self.get_node(element, ['error', 'failure'])
         skipped = self.get_node(element, ['skipped'])
@@ -104,6 +111,7 @@ class NunitParser(XmlParser):
             result.duration = 0
         else:
             result.duration = duration
+        self.total_duration += float(result.duration)
 
         if element.getAttribute('result') in ['Ignored', 'Inconclusive']:
             if element.getAttribute('result') == 'Ignored':
@@ -137,12 +145,13 @@ class NunitParser(XmlParser):
 
 def xml_parser_func(format, testplan_id, file_content):
     if testplan_id is not None:
-        launch_id = create_launch(testplan_id)
+        launch = create_launch(testplan_id)
 
     if format == 'nunit':
-        parser = NunitParser(launch_id)
+        parser = NunitParser(launch.id)
     elif format == 'junit':
-        parser = JunitParser(launch_id)
+        parser = JunitParser(launch.id)
 
     parser.load_string(file_content)
+    parser.update_duration(launch)
     return 'Done'

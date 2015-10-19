@@ -90,7 +90,8 @@ class LaunchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Launch
         fields = ('id', 'test_plan', 'created', 'counts', 'tasks',
-                  'state', 'started_by', 'created', 'finished', 'parameters')
+                  'state', 'started_by', 'created', 'finished', 'parameters',
+                  'duration')
 
 
 class TestResultSerializer(serializers.ModelSerializer):

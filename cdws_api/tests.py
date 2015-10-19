@@ -419,7 +419,17 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
             'get', 'launches/{}/calculate_counts/'.format(launch['id']))
         self.assertEqual('Calculation done.', response['message'])
         actual_launch = self._get_launch(launch['id'])
+        self.assertFalse(actual_launch['duration'])
         self.assertEqual(3, actual_launch['counts']['total'])
+
+    def test_update_duration(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+        launch = self._create_launch(test_plan.id)
+        self.assertFalse(launch['duration'])
+        response = self._call_rest(
+            'patch',
+            'launches/{0}/'.format(launch['id']), {'duration': 360})
+        self.assertEqual(360, response['duration'])
 
 
 class TestResultApiTestCase(AbstractEntityApiTestCase):
@@ -868,19 +878,20 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         launches = self._call_rest('get',
                                    'launches/?testplan={}'.format(testplan.id))
         self.assertEqual(1, launches['count'])
-        launch_id = launches['results'][0]['id']
+        launch = launches['results'][0]
         failed = self._call_rest(
             'get',
-            'testresults/?launch={}&state={}'.format(launch_id, FAILED))
+            'testresults/?launch={}&state={}'.format(launch['id'], FAILED))
         skipped = self._call_rest(
             'get',
-            'testresults/?launch={}&state={}'.format(launch_id, SKIPPED))
+            'testresults/?launch={}&state={}'.format(launch['id'], SKIPPED))
         passed = self._call_rest(
             'get',
-            'testresults/?launch={}&state={}'.format(launch_id, PASSED))
+            'testresults/?launch={}&state={}'.format(launch['id'], PASSED))
         self.assertEqual(2, failed['count'])
         self.assertEqual(1, skipped['count'])
         self.assertEqual(1, passed['count'])
+        self.assertEqual(0.4, launch['duration'])
 
     def test_upload_nunit_file(self):
         project = Project.objects.create(name='DummyTestProject')
@@ -892,19 +903,20 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         launches = self._call_rest('get',
                                    'launches/?testplan={}'.format(testplan.id))
         self.assertEqual(1, launches['count'])
-        launch_id = launches['results'][0]['id']
+        launch = launches['results'][0]
         failed = self._call_rest(
             'get',
-            'testresults/?launch={}&state={}'.format(launch_id, FAILED))
+            'testresults/?launch={}&state={}'.format(launch['id'], FAILED))
         skipped = self._call_rest(
             'get',
-            'testresults/?launch={}&state={}'.format(launch_id, SKIPPED))
+            'testresults/?launch={}&state={}'.format(launch['id'], SKIPPED))
         passed = self._call_rest(
             'get',
-            'testresults/?launch={}&state={}'.format(launch_id, PASSED))
+            'testresults/?launch={}&state={}'.format(launch['id'], PASSED))
         self.assertEqual(1, failed['count'])
         self.assertEqual(1, skipped['count'])
         self.assertEqual(1, passed['count'])
+        self.assertEqual(0.2, launch['duration'])
 
     def test_upload_empty_file(self):
         project = Project.objects.create(name='DummyTestProject')

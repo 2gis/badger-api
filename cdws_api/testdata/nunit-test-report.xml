@@ -10,9 +10,9 @@
             <results>
               <test-suite name="nunit" executed="True" result="Failure" success="False" time="0.724" asserts="0">
                 <results>
-                  <test-case name="PassedTest" executed="True" result="Success" success="True" time="0.004" asserts="0">
+                  <test-case name="PassedTest" executed="True" result="Success" success="True" time="0.1" asserts="0">
                   </test-case>
-                  <test-case name="FailedTest" executed="True" result="Failure" success="False" time="0.028" asserts="0">
+                  <test-case name="FailedTest" executed="True" result="Failure" success="False" time="0.1" asserts="0">
                     <failure>
                       <message><![CDATA[]]></message>
                       <stack-trace>
