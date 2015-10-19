@@ -422,7 +422,7 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
         self.assertFalse(actual_launch['duration'])
         self.assertEqual(3, actual_launch['counts']['total'])
 
-    def update_duration(self):
+    def test_update_duration(self):
         test_plan = TestPlan.objects.get(name='DummyTestPlan')
         launch = self._create_launch(test_plan.id)
         self.assertFalse(launch['duration'])
