@@ -17,6 +17,15 @@ LAUNCH_TYPES = (ASYNC_CALL, INIT_SCRIPT, CONCLUSIVE) = (0, 1, 2)
 CELERY_FINISHED_STATES = (states.SUCCESS, states.FAILURE)
 
 
+class ExtUser(models.Model):
+    user = models.OneToOneField(User, related_name='settings')
+    default_project = models.IntegerField(_('User default project'),
+                                          blank=True, null=True, default=None)
+    launches_on_page = models.IntegerField(_('Launches on page'), default=10)
+    testresults_on_page = models.IntegerField(
+        _('Testresults on page'), default=25)
+
+
 class TestPlan(models.Model):
     name = models.CharField(_('Name'), max_length=256)
     project = models.ForeignKey(Project)

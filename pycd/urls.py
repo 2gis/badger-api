@@ -21,6 +21,7 @@ from cdws_api.views import ReportFileViewSet
 from authentication.views import LoginView
 from authentication.views import LogoutView
 from authentication.views import IsAuthorizedView
+from authentication.views import UpdateSettingsView
 
 from testreport.views import Base
 
@@ -47,6 +48,8 @@ urlpatterns = patterns(
         LogoutView.as_view(), name='api-auth-logout'),
     url(r'^{0}/auth/get'.format(settings.CDWS_API_PATH),
         IsAuthorizedView.as_view(), name='api-auth-get'),
+    url(r'^{0}/auth/update'.format(settings.CDWS_API_PATH),
+        UpdateSettingsView.as_view(), name='api-auth-update'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^{0}/external/jenkins/(?P<project>[^/.]+)/'.
         format(settings.CDWS_API_PATH), JenkinsViewSet.as_view()),

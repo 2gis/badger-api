@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework import status, views
 from rest_framework.response import Response
 from authentication.serializers import AccountSerializer
+from testreport.models import ExtUser
+
 import logging
 log = logging.getLogger(__name__)
 
@@ -16,6 +18,9 @@ class LoginView(views.APIView):
         account = authenticate(username=username, password=password)
         if account is not None:
             if account.is_active:
+                if not hasattr(account, 'settings'):
+                    account.settings = ExtUser()
+                    account.settings.save()
                 login(request, account)
                 serialized = AccountSerializer(account)
                 return Response(serialized.data)
@@ -37,6 +42,30 @@ class IsAuthorizedView(views.APIView):
         if request.user.is_authenticated():
             return Response(AccountSerializer(request.user).data,
                             status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'status': 'Unauthorized',
+                'message': 'Unauthorized'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class UpdateSettingsView(views.APIView):
+
+    def post(self, request):
+        if request.user.is_authenticated():
+            decoded_body = request.body.decode('utf-8', errors='replace')
+            if decoded_body is '':
+                return Response({
+                    'message': 'Incorrect data in request'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            data = json.loads(decoded_body)
+            for key, value in data.items():
+                if hasattr(request.user.settings, key):
+                    setattr(request.user.settings, key, value)
+                request.user.settings.save()
+            return Response({
+                'message': 'Profile settings successfully updated'
+            }, status=status.HTTP_200_OK)
         else:
             return Response({
                 'status': 'Unauthorized',
