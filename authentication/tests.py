@@ -94,7 +94,7 @@ class AuthTests(TestsBase):
                               'launches_on_page': 25,
                               'testresults_on_page': 50}),
                           content_type='application/json')
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)
 
         response = c.get('/api/auth/get')
         self.assertEqual(response.status_code, 200)

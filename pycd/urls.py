@@ -20,7 +20,8 @@ from cdws_api.views import ReportFileViewSet
 
 from authentication.views import LoginView
 from authentication.views import LogoutView
-from authentication.views import IsAuthorizedView, UpdateSettingsView
+from authentication.views import IsAuthorizedView
+from authentication.views import UpdateSettingsView
 
 from testreport.views import Base
 

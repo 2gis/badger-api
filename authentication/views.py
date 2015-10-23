@@ -53,18 +53,19 @@ class UpdateSettingsView(views.APIView):
 
     def post(self, request):
         if request.user.is_authenticated():
-            if request.body.decode('utf-8', errors='replace') is '':
+            decoded_body = request.body.decode('utf-8', errors='replace')
+            if decoded_body is '':
                 return Response({
                     'message': 'Incorrect data in request'
                 }, status=status.HTTP_400_BAD_REQUEST)
-            data = json.loads(request.body.decode('utf-8', errors='replace'))
+            data = json.loads(decoded_body)
             for key, value in data.items():
                 if hasattr(request.user.settings, key):
                     setattr(request.user.settings, key, value)
                 request.user.settings.save()
             return Response({
                 'message': 'Profile settings successfully updated'
-            }, status=status.HTTP_201_CREATED)
+            }, status=status.HTTP_200_OK)
         else:
             return Response({
                 'status': 'Unauthorized',

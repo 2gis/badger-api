@@ -19,9 +19,11 @@ CELERY_FINISHED_STATES = (states.SUCCESS, states.FAILURE)
 
 class ExtUser(models.Model):
     user = models.OneToOneField(User, related_name='settings')
-    default_project = models.IntegerField(blank=True, null=True, default=None)
-    launches_on_page = models.IntegerField(default=10)
-    testresults_on_page = models.IntegerField(default=25)
+    default_project = models.IntegerField(_('User default project'),
+                                          blank=True, null=True, default=None)
+    launches_on_page = models.IntegerField(_('Launches on page'), default=10)
+    testresults_on_page = models.IntegerField(
+        _('Testresults on page'), default=25)
 
 
 class TestPlan(models.Model):
