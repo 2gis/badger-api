@@ -135,7 +135,7 @@ def update_state(bug):
             log.debug('Saving bug "{}"'.format(bug.externalId))
             bug.save()
     if bug.state not in settings.BUG_STATE_EXPIRED \
-            and diff > settings.TIME_BEFORE_UPDATE_BUG_INFO:
+            and diff > float(settings.TIME_BEFORE_UPDATE_BUG_INFO):
         log.debug("%s > %s time to update bug state.", diff,
                   settings.TIME_BEFORE_UPDATE_BUG_INFO)
         bug.updated = now
