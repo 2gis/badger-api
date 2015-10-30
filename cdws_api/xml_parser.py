@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 def get_launch(launch_id):
     return Launch.objects.get(id=launch_id)
 
+
 def create_launch(plan_id):
     launch = Launch.objects.create(
         test_plan_id=plan_id, state=FINISHED,

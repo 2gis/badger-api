@@ -76,11 +76,11 @@ else:
 ROOT_URLCONF = 'pycd.urls'
 WSGI_APPLICATION = 'pycd.wsgi.application'
 
-TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
-TEST_OUTPUT_VERBOSE = True
-TEST_OUTPUT_DESCRIPTIONS = True
-TEST_OUTPUT_DIR = 'xmlrunner'
 if 'test' in sys.argv:
+    TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
+    TEST_OUTPUT_VERBOSE = True
+    TEST_OUTPUT_DESCRIPTIONS = True
+    TEST_OUTPUT_DIR = 'reports'
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

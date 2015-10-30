@@ -186,6 +186,7 @@ class TestPlanViewSet(GetOrCreateViewSet):
         env['REPORT_API_URL'] = 'http://{0}/{1}'.format(CDWS_API_HOSTNAME,
                                                         CDWS_API_PATH)
         # environment values should be string for exec
+        env['TESTPLAN_ID'] = str(test_plan.id)
         env['LAUNCH_ID'] = str(launch.id)
 
         # queryset create
