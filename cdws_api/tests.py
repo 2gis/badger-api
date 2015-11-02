@@ -852,7 +852,7 @@ class MetricsApiTestCase(AbstractEntityApiTestCase):
 
 
 class ReportFileApiTestCase(AbstractEntityApiTestCase):
-    def _post(self, file_name, url):
+    def _post(self, file_name, url, data=None):
         auth = '{}:{}'.format(self.user_login, self.user_plain_password)
         credentials = base64.b64encode(auth.encode('ascii'))
         self.client.defaults['HTTP_AUTHORIZATION'] =\
@@ -861,9 +861,12 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         path = os.path.join(os.path.dirname(__file__),
                             'testdata/{}'.format(file_name))
         with open(path, 'rb') as fp:
+            post_data = {'file': fp}
+            if data is not None:
+                post_data = {'file': fp, data['key']: data['value']}
             response = self.client.post('/{0}/external/report-xunit/{1}'.
                                         format(settings.CDWS_API_PATH, url),
-                                        {'file': fp})
+                                        post_data)
         if response.content != b'':
             return json.loads(response.content.decode('utf-8',
                                                       errors='replace'))
@@ -935,3 +938,30 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
                               url='{}/asdf/nunit.xml'.format(testplan.id))
 
         self.assertEqual('Unknown file format', response['message'])
+
+    def test_upload_file_to_launch(self):
+        project = Project.objects.create(name='DummyTestProject')
+        testplan = TestPlan.objects.create(name='DummyTestPlan',
+                                           project=project)
+        launch = Launch.objects.create(test_plan=testplan)
+        self._post(file_name='junit-test-report.xml',
+                   data={'key': 'launch', 'value': launch.id},
+                   url='{}/junit/junit.xml'.format(testplan.id))
+
+        launches = self._call_rest('get',
+                                   'launches/?testplan={}'.format(testplan.id))
+        self.assertEqual(1, launches['count'])
+        launch = launches['results'][0]
+        failed = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], FAILED))
+        skipped = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], SKIPPED))
+        passed = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], PASSED))
+        self.assertEqual(2, failed['count'])
+        self.assertEqual(1, skipped['count'])
+        self.assertEqual(1, passed['count'])
+        self.assertEqual(0.4, launch['duration'])
