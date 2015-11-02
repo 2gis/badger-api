@@ -186,6 +186,7 @@ class TestPlanViewSet(GetOrCreateViewSet):
         env['REPORT_API_URL'] = 'http://{0}/{1}'.format(CDWS_API_HOSTNAME,
                                                         CDWS_API_PATH)
         # environment values should be string for exec
+        env['TESTPLAN_ID'] = str(test_plan.id)
         env['LAUNCH_ID'] = str(launch.id)
 
         # queryset create
@@ -680,17 +681,21 @@ class ReportFileViewSet(APIView):
     parser_classes = (FileUploadParser,)
 
     def post(self, request, filename, testplan_id=None, xunit_format=None):
+        launch_id = None
         if xunit_format not in ['junit', 'nunit']:
             return Response(data={'message': 'Unknown file format'},
                             status=400)
         if 'file' not in request.data:
             return Response(status=400,
                             data={'message': 'No file or empty file received'})
+        if 'launch' in request.data:
+            launch_id = request.data['launch']
         file_obj = request.data['file']
         try:
             xml_parser_func(testplan_id=testplan_id,
                             format=xunit_format,
-                            file_content=file_obj.read())
+                            file_content=file_obj.read(),
+                            launch_id=launch_id)
         except Exception as e:
             log.error(e)
             return Response(

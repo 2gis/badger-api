@@ -10,6 +10,10 @@ import xml.dom.minidom
 log = logging.getLogger(__name__)
 
 
+def get_launch(launch_id):
+    return Launch.objects.get(id=launch_id)
+
+
 def create_launch(plan_id):
     launch = Launch.objects.create(
         test_plan_id=plan_id, state=FINISHED,
@@ -143,9 +147,12 @@ class NunitParser(XmlParser):
         result.save()
 
 
-def xml_parser_func(format, testplan_id, file_content):
+def xml_parser_func(format, testplan_id, file_content, launch_id):
     if testplan_id is not None:
-        launch = create_launch(testplan_id)
+        if launch_id is not None:
+            launch = get_launch(launch_id)
+        else:
+            launch = create_launch(testplan_id)
 
     if format == 'nunit':
         parser = NunitParser(launch.id)
@@ -154,4 +161,5 @@ def xml_parser_func(format, testplan_id, file_content):
 
     parser.load_string(file_content)
     parser.update_duration(launch)
+    launch.calculate_counts()
     return 'Done'
