@@ -124,7 +124,8 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
 
     def _update_testplan(self, testplan_id, name,
                          hidden=None, main=None,
-                         statistic_filter=None, description=None):
+                         statistic_filter=None, description=None,
+                         branch_name=None, branch_regexp=None):
         data = {'name': name}
         if main is not None:
             data['main'] = main
@@ -134,6 +135,10 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
             data['filter'] = statistic_filter
         if description is not None:
             data['description'] = description
+        if branch_name is not None:
+            data['branch_name'] = branch_name
+        if branch_regexp is not None:
+            data['branch_regexp'] = branch_regexp
         return self._call_rest('patch',
                                'testplans/{0}/'.format(testplan_id), data)
 
@@ -338,6 +343,25 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
         data = self._update_testplan(testplan.id, testplan.name,
                                      description='')
         self.assertFalse(data['description'])
+
+    def test_default_branch_settings(self):
+        project = Project.objects.get(name='DummyTestProject')
+        data = self._create_testplan('DefaultBranchSettings', project.id)
+        self.assertFalse(data['branch_name'])
+        self.assertFalse(data['branch_regexp'])
+
+    def test_update_branch_settings(self):
+        testplan = TestPlan.objects.get(name='DummyTestPlan')
+        self.assertFalse(testplan.description)
+        data = self._update_testplan(testplan.id, testplan.name,
+                                     branch_name='BRANCH',
+                                     branch_regexp='^\d+$')
+        self.assertEqual(data['branch_name'], 'BRANCH')
+        self.assertEqual(data['branch_regexp'], '^\d+$')
+        data = self._update_testplan(testplan.id, testplan.name,
+                                     branch_name='BRANCH', branch_regexp='')
+        self.assertEqual(data['branch_name'], 'BRANCH')
+        self.assertEqual(data['branch_regexp'], '')
 
 
 class LaunchApiTestCase(AbstractEntityApiTestCase):

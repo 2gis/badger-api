@@ -37,6 +37,10 @@ class TestPlan(models.Model):
                               blank=True, null=False, max_length=128)
     description = models.TextField(_('Description'), default='',
                                    blank=True, null=False)
+    branch_name = models.TextField(_('Environment branch name'), default='',
+                                   blank=True, null=False, max_length=128)
+    branch_regexp = models.CharField(_('Regexp for filter branch'),
+                                     max_length=255, default='', blank=True)
 
     def __unicode__(self):
         return '{0} -> TestPlan: {1}'.format(self.project, self.name)
