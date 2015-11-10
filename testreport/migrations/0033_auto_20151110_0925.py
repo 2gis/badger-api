@@ -13,14 +13,14 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='testplan',
-            name='branch_name',
-            field=models.TextField(blank=True, max_length=128, verbose_name='Environment branch name', default=''),
+            name='variable_name',
+            field=models.TextField(verbose_name='Environment variable name', blank=True, default='', max_length=128),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='testplan',
-            name='branch_regexp',
-            field=models.CharField(blank=True, max_length=255, verbose_name='Regexp for filter branch', default=''),
+            name='variable_value_regexp',
+            field=models.CharField(verbose_name='Regexp for variable value', blank=True, default='', max_length=255),
             preserve_default=True,
         ),
     ]
