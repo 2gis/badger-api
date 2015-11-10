@@ -682,6 +682,7 @@ class ReportFileViewSet(APIView):
 
     def post(self, request, filename, testplan_id=None, xunit_format=None):
         launch_id = None
+        params = None
         if xunit_format not in ['junit', 'nunit']:
             return Response(data={'message': 'Unknown file format'},
                             status=400)
@@ -690,12 +691,15 @@ class ReportFileViewSet(APIView):
                             data={'message': 'No file or empty file received'})
         if 'launch' in request.data:
             launch_id = request.data['launch']
+        if 'data' in request.data and request.data['data'] != '':
+            params = request.data['data']
         file_obj = request.data['file']
         try:
             xml_parser_func(testplan_id=testplan_id,
                             format=xunit_format,
                             file_content=file_obj.read(),
-                            launch_id=launch_id)
+                            launch_id=launch_id,
+                            params=params)
         except Exception as e:
             log.error(e)
             return Response(
