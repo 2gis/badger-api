@@ -37,6 +37,12 @@ class TestPlan(models.Model):
                               blank=True, null=False, max_length=128)
     description = models.TextField(_('Description'), default='',
                                    blank=True, null=False)
+    variable_name = models.TextField(_('Environment variable name'),
+                                     default='', blank=True,
+                                     null=False, max_length=128)
+    variable_value_regexp = models.CharField(_('Regexp for variable value'),
+                                             max_length=255, default='',
+                                             blank=True)
 
     def __unicode__(self):
         return '{0} -> TestPlan: {1}'.format(self.project, self.name)

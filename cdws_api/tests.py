@@ -124,7 +124,8 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
 
     def _update_testplan(self, testplan_id, name,
                          hidden=None, main=None,
-                         statistic_filter=None, description=None):
+                         statistic_filter=None, description=None,
+                         variable_name=None, variable_value_regexp=None):
         data = {'name': name}
         if main is not None:
             data['main'] = main
@@ -134,6 +135,10 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
             data['filter'] = statistic_filter
         if description is not None:
             data['description'] = description
+        if variable_name is not None:
+            data['variable_name'] = variable_name
+        if variable_value_regexp is not None:
+            data['variable_value_regexp'] = variable_value_regexp
         return self._call_rest('patch',
                                'testplans/{0}/'.format(testplan_id), data)
 
@@ -338,6 +343,26 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
         data = self._update_testplan(testplan.id, testplan.name,
                                      description='')
         self.assertFalse(data['description'])
+
+    def test_default_variable_settings(self):
+        project = Project.objects.get(name='DummyTestProject')
+        data = self._create_testplan('DefaultBranchSettings', project.id)
+        self.assertFalse(data['variable_name'])
+        self.assertFalse(data['variable_value_regexp'])
+
+    def test_update_variable_settings(self):
+        testplan = TestPlan.objects.get(name='DummyTestPlan')
+        self.assertFalse(testplan.description)
+        data = self._update_testplan(testplan.id, testplan.name,
+                                     variable_name='BRANCH',
+                                     variable_value_regexp='^\d+$')
+        self.assertEqual(data['variable_name'], 'BRANCH')
+        self.assertEqual(data['variable_value_regexp'], '^\d+$')
+        data = self._update_testplan(testplan.id, testplan.name,
+                                     variable_name='BRANCH',
+                                     variable_value_regexp='')
+        self.assertEqual(data['variable_name'], 'BRANCH')
+        self.assertEqual(data['variable_value_regexp'], '')
 
 
 class LaunchApiTestCase(AbstractEntityApiTestCase):
