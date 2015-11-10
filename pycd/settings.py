@@ -170,6 +170,7 @@ LOGGING = {
     }
 }
 
+CELERY_HOST = os.environ.get('CELERY_HOST', '')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

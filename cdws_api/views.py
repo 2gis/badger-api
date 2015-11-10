@@ -65,8 +65,7 @@ from djcelery.models import TaskMeta, CrontabSchedule, PeriodicTask
 
 from celery.utils import uuid
 
-from pycd.settings import CDWS_WORKING_DIR, CDWS_API_PATH, CDWS_API_HOSTNAME
-from pycd.settings import RUNDECK_URL
+from django.conf import settings
 from pycd.celery import app
 
 import datetime
@@ -162,7 +161,7 @@ class TestPlanViewSet(GetOrCreateViewSet):
                   permission_classes=[IsAuthenticatedOrReadOnly])
     def execute(self, request, pk=None):
         workspace_path = os.path.join(
-            CDWS_WORKING_DIR,
+            settings.CDWS_WORKING_DIR,
             timezone.now().strftime('%Y-%m-%d-%H-%M-%f'))
         post_data = request.DATA
         options = request.DATA['options']
@@ -183,11 +182,13 @@ class TestPlanViewSet(GetOrCreateViewSet):
         if 'env' in post_data:
             for key, value in iter(post_data['env'].items()):
                 env[key] = value
-        env['REPORT_API_URL'] = 'http://{0}/{1}'.format(CDWS_API_HOSTNAME,
-                                                        CDWS_API_PATH)
+        env['REPORT_API_URL'] = 'http://{0}/{1}'.format(
+            settings.CDWS_API_HOSTNAME, settings.CDWS_API_PATH)
         # environment values should be string for exec
         env['TESTPLAN_ID'] = str(test_plan.id)
         env['LAUNCH_ID'] = str(launch.id)
+        env['WORKSPACE_URL'] = 'http://{}{}/'.format(
+            settings.CELERY_HOST, workspace_path.replace('/opt/', '/'))
 
         # queryset create
         if 'launch_items' in post_data:
@@ -483,7 +484,7 @@ class RundeckViewSet(APIView):
         root = request.DATA
         job_status = 'unknown'
         group_name = 'unknown'
-        href = RUNDECK_URL
+        href = settings.RUNDECK_URL
         for child in root.iter():
             if child.tag == 'execution':
                 job_status = child.attrib['status']
