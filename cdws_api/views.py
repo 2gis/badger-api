@@ -284,7 +284,7 @@ class LaunchViewSet(viewsets.ModelViewSet):
                 # unknown status too.
                 if app.AsyncResult(key).state != 'PENDING':
                     tasks[key] = v
-                app.control.revoke(key, terminate=True, signal='SIGKILL')
+                app.control.revoke(key, terminate=True, signal='SIGTERM')
             launch.set_tasks(tasks)
             launch.save()
             finalize_launch(pk, STOPPED)
