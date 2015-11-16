@@ -32,7 +32,7 @@ def launch_process(cmd, env={}):
         if pid is None:
             log.warn("Pid is None, nothing to kill...")
             return
-        kill_proc_tree(pid, signal.SIGKILL)
+        kill_proc_tree(pid)
 
     signal.signal(signal.SIGTERM, sigterm_handler)
 
