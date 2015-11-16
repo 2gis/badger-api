@@ -3,13 +3,24 @@ from celery.exceptions import SoftTimeLimitExceeded
 
 import celery
 import subprocess
-
 import logging
 import datetime
 import signal
-import os
+import psutil
+
 
 log = logging.getLogger(__name__)
+
+
+def kill_proc_tree(pid, including_parent=True):
+    parent = psutil.Process(pid)
+    children = parent.children(recursive=True)
+    for child in children:
+        child.kill()
+    psutil.wait_procs(children, timeout=5)
+    if including_parent:
+        parent.kill()
+        parent.wait(5)
 
 
 @celery.task(time_limit=43200)
@@ -21,8 +32,7 @@ def launch_process(cmd, env={}):
         if pid is None:
             log.warn("Pid is None, nothing to kill...")
             return
-        log.debug('Killing process with id: {}...'.format(pid))
-        os.kill(pid, signal.SIGTERM)
+        kill_proc_tree(pid, signal.SIGKILL)
 
     signal.signal(signal.SIGTERM, sigterm_handler)
 

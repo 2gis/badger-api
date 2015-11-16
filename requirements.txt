@@ -13,5 +13,6 @@ gunicorn==19.3.0
 psycopg2==2.6
 requests==2.7.0
 pytz
+psutil==3.2.2
 defusedxml==0.4.1
 djangorestframework-xml==1.2.0
