@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from common.models import Project
+from common.tasks import launch_process
 
 from testreport.models import TestPlan
 from testreport.models import Launch
@@ -98,3 +99,27 @@ class TestResultTest(TestCase):
         r.save()
         r1.save()
         self.assertEqual(len(self.launch.testresult_set.all()), 2)
+
+
+class TestLaunchProcessFunction(TestCase):
+    def test_success(self):
+        output = launch_process('echo "Hello world"')
+        self.assertEqual(output['stdout'], b'Hello world\n')
+        self.assertEqual(output['stderr'], b'')
+        self.assertEqual(output['return_code'], 0)
+
+    def test_failed(self):
+        output = launch_process('echo "Error" 1>&2; exit 1')
+        self.assertEqual(output['stdout'], b'')
+        self.assertEqual(output['stderr'], b'Error\n')
+        self.assertEqual(output['return_code'], 1)
+
+    def test_env(self):
+        test_dict = {
+            'HOME': '/tmp/',
+            'var1': 'VALUE',
+            'Test2': '0'
+        }
+        output = launch_process('echo "${HOME};${var1};${Test2}"', test_dict)
+        self.assertDictEqual(output['env'], test_dict)
+        self.assertEqual(output['stdout'], b'/tmp/;VALUE;0\n')
