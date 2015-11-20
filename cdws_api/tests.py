@@ -584,6 +584,9 @@ class CommentsApiTestCase(AbstractEntityApiTestCase):
 class BugsApiTestCase(AbstractEntityApiTestCase):
     issue_found = '{"key": "ISSUE-1","fields": ' \
                   '{"status": {"name": "Closed"},"summary": "Issue Title"}}'
+    issue_open_status = '{"key": "ISSUE-1","fields": ' \
+                        '{"status": {"name": "Open"},' \
+                        '"summary": "Issue Title"}}'
     issue_not_found = '{"errorMessages": ' \
                       '["Issue Does Not Exist"], "errors": { } }'
     issue_errors = '{"errorMessages": ' \
@@ -659,12 +662,12 @@ class BugsApiTestCase(AbstractEntityApiTestCase):
 
     @requests_mock.Mocker()
     def test_bug_released_change_status(self, m):
-        m.get(self.issue_request('ISSUE-1'), text=self.issue_found)
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_open_status)
         self._create_bug_db('ISSUE-1', 'regexp', 'Closed', 'Issue Title')
 
         update_bugs()
         response = self._call_rest('get', 'bugs/1/')
-        self.assertEqual('Closed', response['status'])
+        self.assertEqual('Open', response['status'])
 
     @requests_mock.Mocker()
     def test_bug_not_expired(self, m):
