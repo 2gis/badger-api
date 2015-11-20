@@ -5,6 +5,7 @@ from django.contrib.auth.models import User, Permission, ContentType
 from common.models import Project, Settings
 from testreport.models import TestPlan
 from testreport.models import Launch
+from testreport.models import Bug
 from testreport.models import PASSED, FAILED, INIT_SCRIPT, ASYNC_CALL, SKIPPED
 from testreport.models import STOPPED
 
@@ -14,6 +15,11 @@ from metrics.models import Metric, MetricValue
 
 from djcelery.models import PeriodicTask, CrontabSchedule
 
+from testreport.tasks import update_bugs
+
+from django.test.utils import override_settings
+
+import requests_mock
 import json
 import random
 import os
@@ -56,6 +62,9 @@ class AbstractEntityApiTestCase(TestCase):
             raise IndexError('HTTP status code {0} out of range '
                              'of expected values.'.
                              format(response.status_code))
+
+        if not response.content:
+            return response
 
         if content_type == u'application/json':
             return json.loads(response.content.decode('utf-8',
@@ -566,6 +575,115 @@ class CommentsApiTestCase(AbstractEntityApiTestCase):
         comments = self._get_comments()['results']
         self.assertEqual(len(comments), 1)
         self.assertEqual(comments[0]['comment'], self.comment)
+
+
+@override_settings(
+    BUG_TRACKING_SYSTEM_HOST='jira.local',
+    BUG_TRACKING_SYSTEM_BUG_PATH='/rest/api/latest/issue/{issue_id}',
+    BUG_STATE_EXPIRED=['Closed'])
+class BugsApiTestCase(AbstractEntityApiTestCase):
+    issue_found = '{"key": "ISSUE-1","fields": ' \
+                  '{"status": {"name": "Closed"},"summary": "Issue Title"}}'
+    issue_not_found = '{"errorMessages": ' \
+                      '["Issue Does Not Exist"], "errors": { } }'
+    issue_errors = '{"errorMessages": ' \
+                   '[], "errors": {"project":"project is required"} }'
+
+    def issue_request(self, externalId):
+        return 'https://{}/rest/api/latest/issue/{}'.\
+               format(settings.BUG_TRACKING_SYSTEM_HOST, externalId)
+
+    def _create_bug(self):
+        data = {
+            'externalId': 'ISSUE-1',
+            'regexp': 'Regexp'
+        }
+        return self._call_rest('post', 'bugs/', data)
+
+    def _create_bug_db(self, extId, regexp, state, name):
+        Bug.objects.create(externalId=extId, regexp=regexp,
+                           state=state, name=name)
+
+    def _get_bugs(self):
+        return self._call_rest('get', 'bugs/')
+
+    @requests_mock.Mocker()
+    def test_bug_create(self, m):
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_found)
+        response = self._create_bug()
+        self.assertEqual(201, response.status_code)
+
+        response = self._get_bugs()
+        self.assertEqual(1, len(response['results']))
+        issue = response['results'][0]
+        self.assertEqual('ISSUE-1', issue['externalId'])
+        self.assertEqual('Closed', issue['status'])
+        self.assertEqual('Issue Title', issue['name'])
+        self.assertEqual('Regexp', issue['regexp'])
+
+    @requests_mock.Mocker()
+    def test_create_not_existent_bug(self, m):
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_not_found)
+        response = self._create_bug()
+        self.assertEqual('Issue Does Not Exist', response['message'])
+
+    @requests_mock.Mocker()
+    def test_create_errors_bug(self, m):
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_errors)
+        response = self._create_bug()
+        self.assertEqual('project', response['message'])
+
+    @requests_mock.Mocker()
+    @override_settings(TIME_BEFORE_UPDATE_BUG_INFO=0)
+    def test_update_bug_not_exist(self, m):
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_found)
+        m.get(self.issue_request('ISSUE-2'), text=self.issue_not_found)
+
+        self._create_bug_db('ISSUE-1', 'regexp', 'Open', 'Issue Title')
+        self._create_bug_db('ISSUE-2', 'regexp', 'Open', 'Issue Title')
+
+        update_bugs()
+        response = self._call_rest('get', 'bugs/1/')
+        self.assertEqual('Closed', response['status'])
+        response = self._call_rest('get', 'bugs/2/')
+        self.assertEqual('Open', response['status'])
+
+    @requests_mock.Mocker()
+    def test_update_bug_recently(self, m):
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_found)
+        self._create_bug_db('ISSUE-1', 'regexp', 'Open', 'Issue Title')
+
+        update_bugs()
+        response = self._call_rest('get', 'bugs/1/')
+        self.assertEqual('Open', response['status'])
+
+    @requests_mock.Mocker()
+    def test_bug_released_change_status(self, m):
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_found)
+        self._create_bug_db('ISSUE-1', 'regexp', 'Closed', 'Issue Title')
+
+        update_bugs()
+        response = self._call_rest('get', 'bugs/1/')
+        self.assertEqual('Closed', response['status'])
+
+    @requests_mock.Mocker()
+    def test_bug_not_expired(self, m):
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_found)
+        self._create_bug_db('ISSUE-1', 'regexp', 'Closed', 'Issue Title')
+
+        update_bugs()
+        response = self._call_rest('get', 'bugs/1/')
+        self.assertEqual('Closed', response['status'])
+
+    @requests_mock.Mocker()
+    @override_settings(BUG_TIME_EXPIRED=0)
+    def test_bug_expired(self, m):
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_found)
+        self._create_bug_db('ISSUE-1', 'regexp', 'Closed', 'Issue Title')
+
+        update_bugs()
+        response = self._get_bugs()
+        self.assertEqual(0, len(response['results']))
 
 
 class StagesApiTestCase(AbstractEntityApiTestCase):

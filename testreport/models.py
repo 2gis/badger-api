@@ -9,6 +9,9 @@ from celery import states
 import logging
 import json
 
+from django.conf import settings
+import requests
+
 log = logging.getLogger(__name__)
 
 TEST_STATES = (PASSED, FAILED, SKIPPED, BLOCKED) = (0, 1, 2, 3)
@@ -159,3 +162,24 @@ class Bug(models.Model):
 
     def __unicode__(self):
         return ':'.join((self.externalId, self.name))
+
+
+def get_issue_fields_from_bts(externalId):
+    log.debug('Get fields for bug {}'.format(externalId))
+    res = _get_bug(externalId)
+    if 'fields' in res:
+        return res['fields']
+    return res
+
+
+def _get_bug(bug_id):
+    response = requests.get(
+        'https://{}{}'.format(
+            settings.BUG_TRACKING_SYSTEM_HOST,
+            settings.BUG_TRACKING_SYSTEM_BUG_PATH.format(issue_id=bug_id)),
+        auth=(settings.BUG_TRACKING_SYSTEM_LOGIN,
+              settings.BUG_TRACKING_SYSTEM_PASSWORD),
+        headers={'Content-Type': 'application/json'})
+    data = response.json()
+    log.debug(data)
+    return data
