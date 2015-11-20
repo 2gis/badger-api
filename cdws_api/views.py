@@ -47,6 +47,7 @@ from testreport.models import LaunchItem
 from testreport.models import Bug
 from testreport.models import INITIALIZED, ASYNC_CALL, INIT_SCRIPT, CONCLUSIVE
 from testreport.models import STOPPED
+from testreport.models import get_issue_fields_from_bts
 
 from stages.models import Stage
 
@@ -389,6 +390,27 @@ class BugViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly, )
     filter_backends = (DjangoFilterBackend, OrderingFilter, )
     filter_fields = ('id', 'externalId')
+
+    def create(self, request, *args, **kwargs):
+        log.info('Check issue {} for existing'.
+                 format(request.DATA['externalId']))
+        response = get_issue_fields_from_bts(request.DATA['externalId'])
+
+        errors = []
+        if 'errors' in response:
+            errors += response['errors']
+        if 'errorMessages' in response:
+            errors += response['errorMessages']
+        if len(errors) != 0:
+            return Response(
+                data={'message': '\n'.join(errors)},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        Bug.objects.create(externalId=request.DATA['externalId'],
+                           regexp=request.DATA['regexp'],
+                           state=response['status']['name'],
+                           name=response['summary'])
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class StageViewSet(GetOrCreateViewSet):
