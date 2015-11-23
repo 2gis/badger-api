@@ -179,8 +179,10 @@ class TestPlanViewSet(GetOrCreateViewSet):
         launch.save()
 
         # env create
-        env = {'WORKSPACE': settings.CDWS_DEPLOY_DIR + workspace_path,
-               'HOME': settings.CDWS_DEPLOY_DIR + workspace_path}
+        env = {'WORKSPACE':
+               os.path.join(settings.CDWS_DEPLOY_DIR, workspace_path),
+               'HOME':
+               os.path.join(settings.CDWS_DEPLOY_DIR, workspace_path)}
         if 'env' in post_data:
             for key, value in iter(post_data['env'].items()):
                 env[key] = value
