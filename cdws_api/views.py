@@ -179,7 +179,8 @@ class TestPlanViewSet(GetOrCreateViewSet):
         launch.save()
 
         # env create
-        env = {'WORKSPACE': workspace_path, 'HOME': workspace_path}
+        env = {'WORKSPACE': settings.CDWS_DEPLOY_DIR + workspace_path,
+               'HOME': settings.CDWS_DEPLOY_DIR + workspace_path}
         if 'env' in post_data:
             for key, value in iter(post_data['env'].items()):
                 env[key] = value
@@ -189,7 +190,7 @@ class TestPlanViewSet(GetOrCreateViewSet):
         env['TESTPLAN_ID'] = str(test_plan.id)
         env['LAUNCH_ID'] = str(launch.id)
         env['WORKSPACE_URL'] = 'http://{}{}/'.format(
-            settings.CELERY_HOST, workspace_path.replace('/opt/', '/'))
+            settings.CELERY_HOST, workspace_path)
 
         # queryset create
         if 'launch_items' in post_data:
