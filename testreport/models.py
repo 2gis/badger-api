@@ -47,7 +47,7 @@ class TestPlan(models.Model):
                                              max_length=255, default='',
                                              blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{0} -> TestPlan: {1}'.format(self.project, self.name)
 
 
@@ -119,7 +119,7 @@ class Launch(models.Model):
     def set_parameters(self, parameters):
         self.parameters = json.dumps(parameters)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{0} -> Launch: {1}'.format(self.test_plan, self.pk)
 
 
@@ -133,7 +133,7 @@ class TestResult(models.Model):
     duration = models.FloatField(_('Duration time'), default=0.0)
     launch_item_id = models.IntegerField(blank=True, default=None, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{0} -> TestResult: {1}/{2}'.format(
             self.launch, self.suite, self.name)
 
@@ -146,7 +146,7 @@ class LaunchItem(models.Model):
     timeout = models.IntegerField(default=300)
     type = models.IntegerField(default=ASYNC_CALL)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{0} -> {1}'.format(self.test_plan.name, self.name)
 
 
@@ -160,7 +160,7 @@ class Bug(models.Model):
     def get_state(self):
         return self.state
 
-    def __unicode__(self):
+    def __str__(self):
         return ':'.join((self.externalId, self.name))
 
 
