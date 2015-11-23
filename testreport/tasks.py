@@ -2,9 +2,7 @@ from __future__ import absolute_import
 
 from testreport.models import Launch, FINISHED, STOPPED, CELERY_FINISHED_STATES
 from testreport.models import Bug
-
-from rest_framework.exceptions import APIException
-import requests
+from testreport.models import get_issue_fields_from_bts
 
 import celery
 
@@ -102,7 +100,11 @@ def cleanup_database():
 def update_bugs():
     if settings.JIRA_INTEGRATION:
         for bug in Bug.objects.all():
-            update_state(bug)
+            try:
+                update_state(bug)
+            except Exception as e:
+                log.error('Unable to update bug {}: {}'.
+                          format(bug.externalId, e))
     else:
         log.info('Jira integration is off. '
                  'If you want to use this feature, turn it on.')
@@ -117,14 +119,16 @@ def update_state(bug):
 
     if bug.state in settings.BUG_STATE_EXPIRED:
         old_state = bug.state
-        new_state = _get_state_from_bts(bug)
+        new_state = \
+            get_issue_fields_from_bts(bug.externalId)['status']['name']
         log.debug('Comparing bug state,'
                   '"{0}" and "{1}"'.format(old_state, new_state))
-        if old_state == new_state and diff > settings.BUG_TIME_EXPIRED:
+        if old_state == new_state and diff > float(settings.BUG_TIME_EXPIRED):
             log.debug(
                 'Bug "{}" expired, deleting it from DB'.format(bug.externalId))
             bug.delete()
-        elif old_state == new_state and diff < settings.BUG_TIME_EXPIRED:
+        elif old_state == new_state \
+                and diff < float(settings.BUG_TIME_EXPIRED):
             log.debug(
                 'Bug "{}" not updated, '
                 'because {} seconds not expired'.format(
@@ -139,38 +143,7 @@ def update_state(bug):
         log.debug("%s > %s time to update bug state.", diff,
                   settings.TIME_BEFORE_UPDATE_BUG_INFO)
         bug.updated = now
-        bug.state = _get_state_from_bts(bug)
+        bug.state = \
+            get_issue_fields_from_bts(bug.externalId)['status']['name']
         log.debug('Saving bug "{}"'.format(bug.externalId))
         bug.save()
-
-
-def get_name_from_bts(bug):
-    log.debug('Get name for bug "{}"'.format(bug.externalId))
-    return _get_bug(bug.externalId)['fields']['summary']
-
-
-def _get_state_from_bts(bug):
-    log.debug('Get state for bug {}'.format(bug.externalId))
-    return _get_bug(bug.externalId)['fields']['status']['name']
-
-
-def _get_bug(bug_id):
-    response = requests.get(
-        'https://{}{}'.format(
-            settings.BUG_TRACKING_SYSTEM_HOST,
-            settings.BUG_TRACKING_SYSTEM_BUG_PATH.format(issue_id=bug_id)),
-        auth=(settings.BUG_TRACKING_SYSTEM_LOGIN,
-              settings.BUG_TRACKING_SYSTEM_PASSWORD),
-        headers={'Content-Type': 'application/json'})
-    data = response.json()
-    log.debug(data)
-    errors = []
-    if 'errors' in data:
-        errors += data['errors']
-    if 'errorMessages' in data:
-        errors += data['errorMessages']
-    if len(errors) != 0:
-        errors = map(lambda x: x.encode('utf-8', errors='replace'), errors)
-        raise APIException(
-            "Bug tracking system: '{}'".format('\n'.join(errors)))
-    return data

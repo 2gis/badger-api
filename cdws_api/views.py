@@ -47,6 +47,7 @@ from testreport.models import LaunchItem
 from testreport.models import Bug
 from testreport.models import INITIALIZED, ASYNC_CALL, INIT_SCRIPT, CONCLUSIVE
 from testreport.models import STOPPED
+from testreport.models import get_issue_fields_from_bts
 
 from stages.models import Stage
 
@@ -285,7 +286,7 @@ class LaunchViewSet(viewsets.ModelViewSet):
                 # unknown status too.
                 if app.AsyncResult(key).state != 'PENDING':
                     tasks[key] = v
-                app.control.revoke(key, terminate=True, signal='SIGKILL')
+                app.control.revoke(key, terminate=True, signal='SIGTERM')
             launch.set_tasks(tasks)
             launch.save()
             finalize_launch(pk, STOPPED)
@@ -390,6 +391,27 @@ class BugViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly, )
     filter_backends = (DjangoFilterBackend, OrderingFilter, )
     filter_fields = ('id', 'externalId')
+
+    def create(self, request, *args, **kwargs):
+        log.info('Check issue {} for existing'.
+                 format(request.DATA['externalId']))
+        response = get_issue_fields_from_bts(request.DATA['externalId'])
+
+        errors = []
+        if 'errors' in response:
+            errors += response['errors']
+        if 'errorMessages' in response:
+            errors += response['errorMessages']
+        if len(errors) != 0:
+            return Response(
+                data={'message': '\n'.join(errors)},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        Bug.objects.create(externalId=request.DATA['externalId'],
+                           regexp=request.DATA['regexp'],
+                           state=response['status']['name'],
+                           name=response['summary'])
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class StageViewSet(GetOrCreateViewSet):
@@ -683,6 +705,7 @@ class ReportFileViewSet(APIView):
 
     def post(self, request, filename, testplan_id=None, xunit_format=None):
         launch_id = None
+        params = None
         if xunit_format not in ['junit', 'nunit']:
             return Response(data={'message': 'Unknown file format'},
                             status=400)
@@ -691,12 +714,15 @@ class ReportFileViewSet(APIView):
                             data={'message': 'No file or empty file received'})
         if 'launch' in request.data:
             launch_id = request.data['launch']
+        if 'data' in request.data and request.data['data'] != '':
+            params = request.data['data']
         file_obj = request.data['file']
         try:
             xml_parser_func(testplan_id=testplan_id,
                             format=xunit_format,
                             file_content=file_obj.read(),
-                            launch_id=launch_id)
+                            launch_id=launch_id,
+                            params=params)
         except Exception as e:
             log.error(e)
             return Response(

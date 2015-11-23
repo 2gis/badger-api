@@ -3,15 +3,39 @@ from celery.exceptions import SoftTimeLimitExceeded
 
 import celery
 import subprocess
-
 import logging
 import datetime
+import signal
+import psutil
+
 
 log = logging.getLogger(__name__)
 
 
+def kill_proc_tree(pid, including_parent=True):
+    parent = psutil.Process(pid)
+    children = parent.children(recursive=True)
+    for child in children:
+        child.kill()
+    psutil.wait_procs(children, timeout=5)
+    if including_parent:
+        parent.kill()
+        parent.wait(5)
+
+
 @celery.task(time_limit=43200)
 def launch_process(cmd, env={}):
+    pid = None
+
+    def sigterm_handler(signum, frame):
+        log.debug('Get "{}", starting handler'.format(signum))
+        if pid is None:
+            log.warn("Pid is None, nothing to kill...")
+            return
+        kill_proc_tree(pid)
+
+    signal.signal(signal.SIGTERM, sigterm_handler)
+
     start = datetime.datetime.now()
     cmd = cmd.replace('\n', ';').replace('\r', '')
     result = {
@@ -28,6 +52,7 @@ def launch_process(cmd, env={}):
         cmd = subprocess.Popen(['bash', '-c', cmd], stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, env=env, cwd=cwd,
                                universal_newlines=False)
+        pid = cmd.pid
         result['stdout'], result['stderr'] = cmd.communicate()
         result['return_code'] = cmd.returncode
     except subprocess.CalledProcessError as e:
