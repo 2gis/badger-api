@@ -109,6 +109,7 @@ if not CDWS_API_HOSTNAME:
     raise RuntimeError('Please set the environment variable CDWS_API_HOSTNAME')
 
 CDWS_API_PATH = 'api'
+CDWS_DEPLOY_DIR = os.environ.get('CDWS_DEPLOY_DIR', '/opt')
 CDWS_WORKING_DIR = os.environ.get('CDWS_WORKING_DIR', '/tmp/')
 
 
@@ -170,6 +171,7 @@ LOGGING = {
     }
 }
 
+CELERY_HOST = os.environ.get('CELERY_HOST', '')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
