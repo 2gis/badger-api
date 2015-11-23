@@ -15,6 +15,7 @@ ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = (
+    'django.contrib.staticfiles',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -126,6 +127,7 @@ REST_FRAMEWORK = {
     'PAGINATE_BY_PARAM': 'page_size',
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer'
     ),
 }
 
@@ -202,3 +204,6 @@ if not DEBUG:
 
 STORE_TESTRESULTS_IN_DAYS = os.environ.get('STORE_TESTRESULTS_IN_DAYS', 7)
 RUNDECK_URL = os.environ.get('RUNDECK_URL', '')
+
+STATIC_URL = os.environ.get('STATIC_URL', '/static/')
+STATIC_ROOT = os.environ.get('STATIC_ROOT', '/tmp/static/')

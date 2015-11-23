@@ -18,7 +18,7 @@ class Metric(models.Model):
     error = models.TextField(default='', blank=True)
     weight = models.IntegerField(default=1)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} -> Metric: {}'.format(self.project, self.name)
 
     def get_schedule_as_cron(self):
@@ -34,7 +34,7 @@ class MetricValue(models.Model):
                               validators=[MinValueValidator(0.0)])
     created = models.DateTimeField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.value
 
     def save(self, force_insert=False, force_update=False, using=None,
