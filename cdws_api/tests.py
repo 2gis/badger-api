@@ -16,8 +16,12 @@ from metrics.models import Metric, MetricValue
 from djcelery.models import PeriodicTask, CrontabSchedule
 
 from testreport.tasks import update_bugs
+from testreport.tasks import cleanup_database
 
 from django.test.utils import override_settings
+
+from django.utils import timezone
+from datetime import timedelta
 
 import requests_mock
 import json
@@ -474,6 +478,23 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
         self.launch = Launch.objects.create(test_plan=self.test_plan,
                                             started_by='http://2gis.local/')
 
+    def _get_testresult_data(self, launch_id):
+        return [{
+            'launch': launch_id,
+            'name': 'DummyTestCase',
+            'suite': 'DummyTestSuite',
+            'state': PASSED,
+            'failure_reason': None,
+            'duration': 1
+        }, {
+            'launch': launch_id,
+            'name': 'SecondDummyTestSuite',
+            'suite': 'SecondDummyTestSuite',
+            'state': FAILED,
+            'failure_reason': 'Exception: Clear message about failure',
+            'duration': 5
+        }]
+
     def _create_testresult(self, data):
         return self._call_rest('post', 'testresults/', data)
 
@@ -486,21 +507,7 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
             return self._call_rest('get', 'testresults/')
 
     def test_creation(self):
-        data = [{
-            'launch': self.launch.id,
-            'name': 'DummyTestCase',
-            'suite': 'DummyTestSuite',
-            'state': PASSED,
-            'failure_reason': None,
-            'duration': 1
-        }, {
-            'launch': self.launch.id,
-            'name': 'SecondDummyTestSuite',
-            'suite': 'SecondDummyTestSuite',
-            'state': FAILED,
-            'failure_reason': 'Exception: Clear message about failure',
-            'duration': 5
-        }]
+        data = self._get_testresult_data(self.launch.id)
         self._create_testresult(data)
         self.assertEqual(len(self._get_testresults()['results']), 2)
 
@@ -508,37 +515,9 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
         launches = [self.launch,
                     Launch.objects.create(test_plan=self.test_plan,
                                           started_by='http://2gis.local/')]
-        data1 = [{
-            'launch': launches[0].id,
-            'name': 'DummyTestCase',
-            'suite': 'DummyTestSuite',
-            'state': PASSED,
-            'failure_reason': None,
-            'duration': 1
-        }, {
-            'launch': launches[0].id,
-            'name': 'SecondDummyTestSuite',
-            'suite': 'SecondDummyTestSuite',
-            'state': FAILED,
-            'failure_reason': 'Exception: Clear message about failure',
-            'duration': 5
-        }]
+        data1 = self._get_testresult_data(launches[0].id)
         self._create_testresult(data1)
-        data2 = [{
-            'launch': launches[1].id,
-            'name': 'DummyTestCase',
-            'suite': 'DummyTestSuite',
-            'state': PASSED,
-            'failure_reason': None,
-            'duration': 1
-        }, {
-            'launch': launches[1].id,
-            'name': 'SecondDummyTestSuite',
-            'suite': 'SecondDummyTestSuite',
-            'state': FAILED,
-            'failure_reason': 'Exception: Clear message about failure',
-            'duration': 5
-        }]
+        data2 = self._get_testresult_data(launches[1].id)
         self._create_testresult(data2)
         url = 'launch_id__in={},{}&state={}'.format(
             launches[0].id, launches[1].id, FAILED)
@@ -552,6 +531,28 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
 
         self.assertEqual(4, self._get_testresults('launch_id__in=')['count'])
         self.assertEqual(4, self._get_testresults('state__in=')['count'])
+
+    def test_clean_expired_results(self):
+        data = self._get_testresult_data(self.launch.id)
+        self._create_testresult(data)
+        self.assertEqual(len(self._get_testresults()['results']), 2)
+        self.launch.finished = timezone.now().date() - timedelta(days=31)
+        self.launch.save()
+
+        cleanup_database()
+        print(self._get_testresults())
+        self.assertEqual(len(self._get_testresults()['results']), 0)
+
+    def test_not_clean_actual_results(self):
+        data = self._get_testresult_data(self.launch.id)
+        self._create_testresult(data)
+        self.assertEqual(len(self._get_testresults()['results']), 2)
+        self.launch.finished = timezone.now().date() - timedelta(days=1)
+        self.launch.save()
+
+        cleanup_database()
+        print(self._get_testresults())
+        self.assertEqual(len(self._get_testresults()['results']), 2)
 
 
 class CommentsApiTestCase(AbstractEntityApiTestCase):

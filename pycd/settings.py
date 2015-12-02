@@ -202,7 +202,7 @@ if not DEBUG:
     COOKIE_DOMAIN = os.environ.get('COOKIE_DOMAIN', '')
     SESSION_COOKIE_DOMAIN = COOKIE_DOMAIN
 
-STORE_TESTRESULTS_IN_DAYS = os.environ.get('STORE_TESTRESULTS_IN_DAYS', 7)
+STORE_TESTRESULTS_IN_DAYS = os.environ.get('STORE_TESTRESULTS_IN_DAYS', 30)
 RUNDECK_URL = os.environ.get('RUNDECK_URL', '')
 
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
