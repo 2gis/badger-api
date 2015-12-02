@@ -191,7 +191,7 @@ class TestPlanViewSet(GetOrCreateViewSet):
         # environment values should be string for exec
         env['TESTPLAN_ID'] = str(test_plan.id)
         env['LAUNCH_ID'] = str(launch.id)
-        env['WORKSPACE_URL'] = 'http://{}{}/'.format(
+        env['WORKSPACE_URL'] = 'http://{}/{}/'.format(
             settings.CELERY_HOST, workspace_path)
 
         # queryset create
