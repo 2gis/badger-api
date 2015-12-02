@@ -92,8 +92,8 @@ def cleanup_database():
     days = timezone.now().date() - timedelta(
         days=settings.STORE_TESTRESULTS_IN_DAYS)
 
-    map(lambda launch: launch.testresult_set.all().delete(),
-        Launch.objects.filter(finished__lte=days))
+    list(map(lambda launch: launch.testresult_set.all().delete(),
+         Launch.objects.filter(finished__lte=days)))
 
 
 @celery.task()
