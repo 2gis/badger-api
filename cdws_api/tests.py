@@ -540,7 +540,6 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
         self.launch.save()
 
         cleanup_database()
-        print(self._get_testresults())
         self.assertEqual(len(self._get_testresults()['results']), 0)
 
     def test_not_clean_actual_results(self):
@@ -551,7 +550,6 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
         self.launch.save()
 
         cleanup_database()
-        print(self._get_testresults())
         self.assertEqual(len(self._get_testresults()['results']), 2)
 
 
