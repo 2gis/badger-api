@@ -208,3 +208,4 @@ RUNDECK_URL = os.environ.get('RUNDECK_URL', '')
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            os.environ.get('STATIC_ROOT', 'static'))
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
