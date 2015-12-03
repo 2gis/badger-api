@@ -29,7 +29,7 @@ INSTALLED_APPS = (
     'testreport',
     'cdws_api',
     'stages',
-    'metrics'
+    'metrics',
 )
 
 MIDDLEWARE_CLASSES = (
