@@ -4,9 +4,12 @@ from testreport.models import ExtUser
 
 
 class ExtUserSerializer(serializers.ModelSerializer):
+    dashboards = serializers.ReadOnlyField(source='get_dashboards')
+
     class Meta:
         model = ExtUser
-        fields = ('default_project', 'launches_on_page', 'testresults_on_page')
+        fields = ('default_project', 'launches_on_page',
+                  'testresults_on_page', 'dashboards')
 
 
 class AccountSerializer(serializers.ModelSerializer):

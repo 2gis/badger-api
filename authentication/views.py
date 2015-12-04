@@ -61,7 +61,10 @@ class UpdateSettingsView(views.APIView):
             data = json.loads(decoded_body)
             for key, value in data.items():
                 if hasattr(request.user.settings, key):
-                    setattr(request.user.settings, key, value)
+                    if key == 'dashboards':
+                        request.user.settings.set_dashboards(value)
+                    else:
+                        setattr(request.user.settings, key, value)
                 request.user.settings.save()
             return Response({
                 'message': 'Profile settings successfully updated'

@@ -79,6 +79,7 @@ class AuthTests(TestsBase):
         self.assertEqual(10, content['settings']['launches_on_page'])
         self.assertEqual(25, content['settings']['testresults_on_page'])
         self.assertFalse(content['settings']['default_project'])
+        self.assertEqual([], content['settings']['dashboards'])
 
     def test_update(self):
         c = Client()
@@ -103,6 +104,76 @@ class AuthTests(TestsBase):
         self.assertEqual(25, content['settings']['launches_on_page'])
         self.assertEqual(50, content['settings']['testresults_on_page'])
         self.assertEqual(1, content['settings']['default_project'])
+        self.assertEqual([], content['settings']['dashboards'])
+
+    def test_update_dashboards(self):
+        c = Client()
+        c.post('/api/auth/login/',
+               data=json.dumps({
+                   'username': self.user_login,
+                   'password': self.user_plain_password}),
+               content_type='application/json')
+
+        response = c.post('/api/auth/update',
+                          data=json.dumps({
+                              'dashboards': [{
+                                  'name': 'first',
+                                  'testplans': [1, 2, 3]
+                              }, {
+                                  'name': 'second',
+                                  'testplans': [1, 2, 3]
+                              }]}),
+                          content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        response = c.get('/api/auth/get')
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(
+            response.content.decode('utf-8', errors='replace'))
+        dashboards = content['settings']['dashboards']
+        self.assertEqual(2, len(dashboards))
+
+    def test_update_dashboards_empty(self):
+        c = Client()
+        c.post('/api/auth/login/',
+               data=json.dumps({
+                   'username': self.user_login,
+                   'password': self.user_plain_password}),
+               content_type='application/json')
+
+        response = c.post('/api/auth/update',
+                          data=json.dumps({
+                              'dashboards': []}),
+                          content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        response = c.get('/api/auth/get')
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(
+            response.content.decode('utf-8', errors='replace'))
+        dashboards = content['settings']['dashboards']
+        self.assertEqual(0, len(dashboards))
+
+    def test_update_dashboards_empty_string(self):
+        c = Client()
+        c.post('/api/auth/login/',
+               data=json.dumps({
+                   'username': self.user_login,
+                   'password': self.user_plain_password}),
+               content_type='application/json')
+
+        response = c.post('/api/auth/update',
+                          data=json.dumps({
+                              'dashboards': ''}),
+                          content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        response = c.get('/api/auth/get')
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(
+            response.content.decode('utf-8', errors='replace'))
+        dashboards = content['settings']['dashboards']
+        self.assertEqual(0, len(dashboards))
 
     def test_update_bad(self):
         c = Client()
