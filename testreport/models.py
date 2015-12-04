@@ -27,6 +27,15 @@ class ExtUser(models.Model):
     launches_on_page = models.IntegerField(_('Launches on page'), default=10)
     testresults_on_page = models.IntegerField(
         _('Testresults on page'), default=25)
+    dashboards = models.TextField(_('Dashboards'), default='[]')
+
+    def get_dashboards(self):
+        if self.dashboards == '""' or self.dashboards is None:
+            self.dashboards = '[]'
+        return json.loads(self.dashboards)
+
+    def set_dashboards(self, dashboards):
+        self.dashboards = json.dumps(dashboards)
 
 
 class TestPlan(models.Model):

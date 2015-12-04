@@ -329,6 +329,20 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
                              len(testplans) + 1,
                              json.dumps(data['results'], indent=4)))
 
+    def test_tp_id_in(self):
+        projects = [self._create_project('Project1'),
+                    self._create_project('Project2')]
+        self._create_testplan('TP1', projects[0]['id'])
+        self._create_testplan('TP2', projects[1]['id'])
+        self._create_testplan('TP3', projects[1]['id'])
+
+        data = self._get_testplans()
+        self.assertEqual(len(data['results']), 4)
+
+        url = '?id__in=1,2'
+        data = self._get_testplans(url)
+        self.assertEqual(len(data['results']), 2)
+
     def test_task(self):
         task = self._call_rest('get', 'tasks/{}/'.format(1))
         self.assertEqual('PENDING', task['status'])

@@ -144,6 +144,9 @@ class TestPlanViewSet(GetOrCreateViewSet):
                 and request.GET['project_id__in'] != '':
             self.queryset = self.queryset.filter(
                 project_id__in=request.GET['project_id__in'].split(','))
+        if 'id__in' in request.GET and request.GET['id__in'] != '':
+            self.queryset = self.queryset.filter(
+                id__in=request.GET['id__in'].split(','))
         return self.list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
