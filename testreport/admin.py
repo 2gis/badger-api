@@ -3,6 +3,7 @@ import logging
 from django.contrib import admin
 
 from common.models import Project
+from common.models import Settings
 
 from testreport.models import Launch
 from testreport.models import TestPlan
@@ -57,6 +58,7 @@ class BugAdmin(admin.ModelAdmin):
 
 admin.site.register(LaunchItem, LaunchItemAdmin)
 admin.site.register(Project, ProjectAdmin)
+admin.site.register(Settings, ProjectAdmin)
 admin.site.register(Launch, LaunchAdmin)
 admin.site.register(TestPlan, TestPlanAdmin)
 admin.site.register(TestResult, TestResultAdmin)
