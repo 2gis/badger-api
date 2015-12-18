@@ -138,7 +138,8 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
     def _update_testplan(self, testplan_id, name,
                          hidden=None, main=None,
                          statistic_filter=None, description=None,
-                         variable_name=None, variable_value_regexp=None):
+                         variable_name=None, variable_value_regexp=None,
+                         summary=None):
         data = {'name': name}
         if main is not None:
             data['main'] = main
@@ -152,6 +153,8 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
             data['variable_name'] = variable_name
         if variable_value_regexp is not None:
             data['variable_value_regexp'] = variable_value_regexp
+        if summary is not None:
+            data['summary'] = summary
         return self._call_rest('patch',
                                'testplans/{0}/'.format(testplan_id), data)
 
@@ -194,8 +197,13 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
 
     def test_main_flag(self):
         project = Project.objects.get(name='DummyTestProject')
-        data = self._create_testplan('HiddenByDefaultTrue', project.id)
+        data = self._create_testplan('MainByDefaultFalse', project.id)
         self.assertFalse(data['main'])
+
+    def test_summary_flag(self):
+        project = Project.objects.get(name='DummyTestProject')
+        data = self._create_testplan('SummaryByDefaultFalse', project.id)
+        self.assertFalse(data['summary'])
 
     def test_statistic_filter(self):
         testplan = TestPlan.objects.get(name='DummyTestPlan')
@@ -264,6 +272,14 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
         self.assertTrue(data['main'])
         data = self._update_testplan(testplan.id, testplan.name, main=False)
         self.assertFalse(data['main'])
+
+    def test_update_summary_flag(self):
+        testplan = TestPlan.objects.get(name='DummyTestPlan')
+        self.assertFalse(testplan.summary)
+        data = self._update_testplan(testplan.id, testplan.name, summary=True)
+        self.assertTrue(data['summary'])
+        data = self._update_testplan(testplan.id, testplan.name, summary=False)
+        self.assertFalse(data['summary'])
 
     def test_update_hidden_flag(self):
         testplan = TestPlan.objects.get(name='DummyTestPlan')

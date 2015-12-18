@@ -55,6 +55,8 @@ class TestPlan(models.Model):
     variable_value_regexp = models.CharField(_('Regexp for variable value'),
                                              max_length=255, default='',
                                              blank=True)
+    summary = models.BooleanField(_('Use for total chart'),
+                                  blank=True, null=False, default=False)
 
     def __str__(self):
         return '{0} -> TestPlan: {1}'.format(self.project, self.name)
