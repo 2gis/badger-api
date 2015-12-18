@@ -154,7 +154,7 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
         if variable_value_regexp is not None:
             data['variable_value_regexp'] = variable_value_regexp
         if summary is not None:
-            data['summary'] = summary
+            data['show_in_summary'] = summary
         return self._call_rest('patch',
                                'testplans/{0}/'.format(testplan_id), data)
 
@@ -203,7 +203,7 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
     def test_summary_flag(self):
         project = Project.objects.get(name='DummyTestProject')
         data = self._create_testplan('SummaryByDefaultFalse', project.id)
-        self.assertFalse(data['summary'])
+        self.assertFalse(data['show_in_summary'])
 
     def test_statistic_filter(self):
         testplan = TestPlan.objects.get(name='DummyTestPlan')
@@ -275,11 +275,11 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
 
     def test_update_summary_flag(self):
         testplan = TestPlan.objects.get(name='DummyTestPlan')
-        self.assertFalse(testplan.summary)
+        self.assertFalse(testplan.show_in_summary)
         data = self._update_testplan(testplan.id, testplan.name, summary=True)
-        self.assertTrue(data['summary'])
+        self.assertTrue(data['show_in_summary'])
         data = self._update_testplan(testplan.id, testplan.name, summary=False)
-        self.assertFalse(data['summary'])
+        self.assertFalse(data['show_in_summary'])
 
     def test_update_hidden_flag(self):
         testplan = TestPlan.objects.get(name='DummyTestPlan')
