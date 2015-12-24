@@ -166,7 +166,7 @@ class Bug(models.Model):
     externalId = models.CharField(max_length=255, blank=False)
     name = models.CharField(max_length=255, default='', blank=True)
     regexp = models.CharField(max_length=255, default='', blank=False)
-    state = models.CharField(max_length=16, default='', blank=True)
+    state = models.CharField(max_length=32, default='', blank=True)
     updated = models.DateTimeField(auto_now=True)
 
     def get_state(self):
