@@ -70,12 +70,18 @@ class JunitParser(XmlParser):
 
     def create_test_result(self, element, path):
         result = TestResult.objects.create(launch_id=self.launch_id)
+        duration = element.getAttribute('time')
+
+        if duration == '':
+            result.duration = 0
+        else:
+            result.duration = duration
+        self.total_duration += float(result.duration)
+
         result.name = element.getAttribute('name')[:127]
         result.suite = path[:125]
         result.state = BLOCKED
-        result.duration = element.getAttribute('time')
         result.failure_reason = ''
-        self.total_duration += float(result.duration)
 
         error = self.get_node(element, ['error', 'failure'])
         skipped = self.get_node(element, ['skipped'])
