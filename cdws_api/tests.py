@@ -1073,6 +1073,19 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         self.assertEqual(1, passed['count'])
         self.assertEqual(0.4, launch['duration'])
 
+    def test_upload_junit_file_notime(self):
+        project = Project.objects.create(name='DummyTestProject')
+        testplan = TestPlan.objects.create(name='DummyTestPlan',
+                                           project=project)
+        self._post(file_name='junit-test-report-notime.xml',
+                   url='{}/junit/junit.xml'.format(testplan.id))
+
+        launches = self._call_rest('get',
+                                   'launches/?testplan={}'.format(testplan.id))
+        self.assertEqual(1, launches['count'])
+        launch = launches['results'][0]
+        self.assertEqual(0.0, launch['duration'])
+
     def test_upload_nunit_file(self):
         project = Project.objects.create(name='DummyTestProject')
         testplan = TestPlan.objects.create(name='DummyTestPlan',
