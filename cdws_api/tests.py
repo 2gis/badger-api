@@ -139,7 +139,7 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
                          hidden=None, main=None,
                          statistic_filter=None, description=None,
                          variable_name=None, variable_value_regexp=None,
-                         summary=None):
+                         summary=None, twodays=None):
         data = {'name': name}
         if main is not None:
             data['main'] = main
@@ -155,6 +155,8 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
             data['variable_value_regexp'] = variable_value_regexp
         if summary is not None:
             data['show_in_summary'] = summary
+        if twodays is not None:
+            data['show_in_twodays'] = twodays
         return self._call_rest('patch',
                                'testplans/{0}/'.format(testplan_id), data)
 
@@ -204,6 +206,11 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
         project = Project.objects.get(name='DummyTestProject')
         data = self._create_testplan('SummaryByDefaultFalse', project.id)
         self.assertFalse(data['show_in_summary'])
+
+    def test_twodays_flag(self):
+        project = Project.objects.get(name='DummyTestProject')
+        data = self._create_testplan('TwodaysByDefaultFalse', project.id)
+        self.assertFalse(data['show_in_twodays'])
 
     def test_statistic_filter(self):
         testplan = TestPlan.objects.get(name='DummyTestPlan')
@@ -280,6 +287,14 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
         self.assertTrue(data['show_in_summary'])
         data = self._update_testplan(testplan.id, testplan.name, summary=False)
         self.assertFalse(data['show_in_summary'])
+
+    def test_update_twodays_flag(self):
+        testplan = TestPlan.objects.get(name='DummyTestPlan')
+        self.assertFalse(testplan.show_in_twodays)
+        data = self._update_testplan(testplan.id, testplan.name, twodays=True)
+        self.assertTrue(data['show_in_twodays'])
+        data = self._update_testplan(testplan.id, testplan.name, twodays=False)
+        self.assertFalse(data['show_in_twodays'])
 
     def test_update_hidden_flag(self):
         testplan = TestPlan.objects.get(name='DummyTestPlan')
