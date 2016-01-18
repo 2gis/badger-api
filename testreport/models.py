@@ -59,6 +59,10 @@ class TestPlan(models.Model):
         _('Consider in summary calculation'),
         blank=True, null=False, default=False)
 
+    show_in_twodays = models.BooleanField(
+        _('Consider in statistic for last two days'),
+        blank=True, null=False, default=False)
+
     def __str__(self):
         return '{0} -> TestPlan: {1}'.format(self.project, self.name)
 
