@@ -597,6 +597,29 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
         cleanup_database()
         self.assertEqual(len(self._get_testresults()['results']), 2)
 
+    def test_history(self):
+        project = Project.objects.get(name='DummyTestProject')
+        testplan1 = self.test_plan
+        testplan2 = TestPlan.objects.create(name='DummyTestPlan2',
+                                            project=project)
+
+        launches_tp1 = [self.launch,
+                        Launch.objects.create(test_plan=testplan1,
+                                              started_by='http://2gis.local/')]
+
+        launch_tp2 = Launch.objects.create(test_plan=testplan2,
+                                           started_by='http://2gis.local/')
+
+        data11 = self._get_testresult_data(launches_tp1[0].id)
+        data12 = self._get_testresult_data(launches_tp1[1].id)
+        data21 = self._get_testresult_data(launch_tp2.id)
+        self._create_testresult(data11)
+        self._create_testresult(data12)
+        self._create_testresult(data21)
+
+        response = self._get_testresults('history=1')
+        self.assertEqual(2, response['count'])
+
 
 class CommentsApiTestCase(AbstractEntityApiTestCase):
     comment = 'Dummy comment text'

@@ -353,6 +353,21 @@ class TestResultViewSet(ListBulkCreateAPIView,
         if 'state__in' in request.GET and request.GET['state__in'] != '':
             self.queryset = self.queryset.filter(
                 state__in=request.GET['state__in'].split(','))
+        if 'history' in request.GET and request.GET['history'] != '':
+            result = TestResult.objects.get(id=request.GET['history'])
+            launch = Launch.objects.get(id=result.launch_id)
+            delta = datetime.datetime.today() - datetime.timedelta(days=100)
+            launches = Launch.objects.filter(
+                test_plan_id=launch.test_plan_id, created__gt=delta)
+
+            ids = []
+            for l in launches:
+                ids.append(l.id)
+
+            self.queryset = self.queryset.\
+                filter(launch_id__in=ids).\
+                filter(name=result.name, suite=result.suite).\
+                order_by('-launch')
         return self.list(request, *args, **kwargs)
 
 
