@@ -141,7 +141,7 @@ class Launch(models.Model):
 
 class TestResult(models.Model):
     launch = models.ForeignKey(Launch)
-    name = models.CharField(_('Name'), max_length=128)
+    name = models.CharField(_('Name'), max_length=128, db_index=True)
     suite = models.CharField(_('TestSuite'), max_length=256)
     state = models.IntegerField(_('State'), default=BLOCKED)
     failure_reason = models.TextField(_('Failure Reason'), default=None,
