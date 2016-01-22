@@ -641,7 +641,7 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
         self._create_testresult(data21)
 
         response = self._get_testresults('history=1&days=0')
-        self.assertEqual(2, response['count'])
+        self.assertEqual(0, response['count'])
 
 
 class CommentsApiTestCase(AbstractEntityApiTestCase):
