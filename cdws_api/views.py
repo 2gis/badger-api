@@ -346,6 +346,7 @@ class TestResultViewSet(ListBulkCreateAPIView,
 
     @list_route(methods=['get'])
     def custom_list(self, request, *args, **kwargs):
+        days = 100
         if 'launch_id__in' in request.GET \
                 and request.GET['launch_id__in'] != '':
             self.queryset = self.queryset.filter(
@@ -353,10 +354,12 @@ class TestResultViewSet(ListBulkCreateAPIView,
         if 'state__in' in request.GET and request.GET['state__in'] != '':
             self.queryset = self.queryset.filter(
                 state__in=request.GET['state__in'].split(','))
+        if 'days' in request.GET and request.GET['days'] != '':
+            days = int(request.GET['days'])
         if 'history' in request.GET and request.GET['history'] != '':
             result = TestResult.objects.get(id=request.GET['history'])
             launch = Launch.objects.get(id=result.launch_id)
-            delta = datetime.datetime.today() - datetime.timedelta(days=100)
+            delta = datetime.datetime.today() - datetime.timedelta(days=days)
             launches = Launch.objects.filter(
                 test_plan_id=launch.test_plan_id, created__gt=delta)
 
