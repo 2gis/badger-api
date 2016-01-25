@@ -19,6 +19,11 @@ LAUNCH_STATES = (INITIALIZED, IN_PROGRESS, FINISHED, STOPPED) = (0, 1, 2, 3)
 LAUNCH_TYPES = (ASYNC_CALL, INIT_SCRIPT, CONCLUSIVE) = (0, 1, 2)
 CELERY_FINISHED_STATES = (states.SUCCESS, states.FAILURE)
 
+RESULT_PREVIEW_CHOICES = (
+    ('head', 'Show test result head'),
+    ('tail', 'Show test result tail')
+)
+
 
 class ExtUser(models.Model):
     user = models.OneToOneField(User, related_name='settings')
@@ -28,6 +33,9 @@ class ExtUser(models.Model):
     testresults_on_page = models.IntegerField(
         _('Testresults on page'), default=25)
     dashboards = models.TextField(_('Dashboards'), default='[]')
+    result_preview = models.CharField(_('Result preview'), max_length=128,
+                                      choices=RESULT_PREVIEW_CHOICES,
+                                      blank=True, null=True, default=None)
 
     def get_dashboards(self):
         if self.dashboards == '""' or self.dashboards is None:

@@ -80,6 +80,7 @@ class AuthTests(TestsBase):
         self.assertEqual(25, content['settings']['testresults_on_page'])
         self.assertFalse(content['settings']['default_project'])
         self.assertEqual([], content['settings']['dashboards'])
+        self.assertFalse(content['settings']['result_preview'])
 
     def test_update(self):
         c = Client()
@@ -105,6 +106,26 @@ class AuthTests(TestsBase):
         self.assertEqual(50, content['settings']['testresults_on_page'])
         self.assertEqual(1, content['settings']['default_project'])
         self.assertEqual([], content['settings']['dashboards'])
+
+    def test_update_preview(self):
+        c = Client()
+        c.post('/api/auth/login/',
+               data=json.dumps({
+                   'username': self.user_login,
+                   'password': self.user_plain_password}),
+               content_type='application/json')
+
+        response = c.post('/api/auth/update',
+                          data=json.dumps({
+                              'result_preview': 'tail'}),
+                          content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        response = c.get('/api/auth/get')
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(
+            response.content.decode('utf-8', errors='replace'))
+        self.assertEqual('tail', content['settings']['result_preview'])
 
     def test_update_dashboards(self):
         c = Client()
