@@ -9,7 +9,7 @@ class ExtUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtUser
         fields = ('default_project', 'launches_on_page',
-                  'testresults_on_page', 'dashboards')
+                  'testresults_on_page', 'dashboards', 'result_preview')
 
 
 class AccountSerializer(serializers.ModelSerializer):
