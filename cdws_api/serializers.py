@@ -4,6 +4,7 @@ from common.models import Project, Settings
 
 from testreport.models import TestPlan
 from testreport.models import Launch
+from testreport.models import Build
 from testreport.models import TestResult
 from testreport.models import LaunchItem
 from testreport.models import Bug
@@ -82,16 +83,23 @@ class TasksResultField(serializers.DictField):
         return output
 
 
+class BuildSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Build
+        fields = ('version', 'hash', 'branch')
+
+
 class LaunchSerializer(serializers.ModelSerializer):
     counts = serializers.ReadOnlyField()
     tasks = TasksResultField(source='get_tasks', read_only=True)
     parameters = serializers.ReadOnlyField(source='get_parameters')
+    build = BuildSerializer(read_only=True)
 
     class Meta:
         model = Launch
         fields = ('id', 'test_plan', 'created', 'counts', 'tasks',
                   'state', 'started_by', 'created', 'finished', 'parameters',
-                  'duration')
+                  'duration', 'build')
 
 
 class TestResultSerializer(serializers.ModelSerializer):
