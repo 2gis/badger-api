@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Build',
             fields=[
-                ('id', models.AutoField(auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
-                ('version', models.CharField(max_length=128, null=True, default=None, blank=True)),
-                ('hash', models.CharField(max_length=128, null=True, default=None, blank=True)),
-                ('branch', models.CharField(max_length=128, null=True, default=None, blank=True)),
-                ('launch', models.OneToOneField(to='testreport.Launch', related_name='build')),
+                ('id', models.AutoField(verbose_name='ID', primary_key=True, serialize=False, auto_created=True)),
+                ('version', models.CharField(null=True, blank=True, max_length=16, default=None)),
+                ('hash', models.CharField(null=True, blank=True, max_length=64, default=None)),
+                ('branch', models.CharField(null=True, blank=True, max_length=128, default=None)),
+                ('launch', models.OneToOneField(related_name='build', to='testreport.Launch')),
             ],
             options={
             },

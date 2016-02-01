@@ -150,9 +150,9 @@ class Launch(models.Model):
 class Build(models.Model):
     launch = models.OneToOneField(Launch, related_name='build')
     version = models.CharField(
-        max_length=128, default=None, null=True, blank=True)
+        max_length=16, default=None, null=True, blank=True)
     hash = models.CharField(
-        max_length=128, default=None, null=True, blank=True)
+        max_length=64, default=None, null=True, blank=True)
     branch = models.CharField(
         max_length=128, default=None, null=True, blank=True)
 
