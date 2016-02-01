@@ -42,6 +42,7 @@ from cdws_api.xml_parser import xml_parser_func
 
 from testreport.models import TestPlan
 from testreport.models import Launch
+from testreport.models import Build
 from testreport.models import TestResult
 from testreport.models import LaunchItem
 from testreport.models import Bug
@@ -181,6 +182,12 @@ class TestPlanViewSet(GetOrCreateViewSet):
                         state=INITIALIZED)
         launch.save()
 
+        build = Build(launch=launch,
+                      version=options.get('version'),
+                      branch=options.get('branch'),
+                      hash=options.get('hash'))
+        build.save()
+
         # env create
         env = {'WORKSPACE':
                os.path.join(settings.CDWS_DEPLOY_DIR, workspace_path),
@@ -317,6 +324,15 @@ class LaunchViewSet(viewsets.ModelViewSet):
             delta = datetime.datetime.today() - datetime.timedelta(
                 days=int(request.GET['days']))
             self.queryset = self.queryset.filter(created__gt=delta)
+        if 'version' in request.GET:
+            self.queryset = self.queryset.filter(
+                build__version=request.GET['version'])
+        if 'hash' in request.GET:
+            self.queryset = self.queryset.filter(
+                build__hash=request.GET['hash'])
+        if 'branch' in request.GET:
+            self.queryset = self.queryset.filter(
+                build__branch=request.GET['branch'])
         return self.list(request, *args, **kwargs)
 
     @detail_route(methods=['get'],

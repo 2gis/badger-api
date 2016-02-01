@@ -5,6 +5,7 @@ from django.contrib.auth.models import User, Permission, ContentType
 from common.models import Project, Settings
 from testreport.models import TestPlan
 from testreport.models import Launch
+from testreport.models import Build
 from testreport.models import Bug
 from testreport.models import PASSED, FAILED, INIT_SCRIPT, ASYNC_CALL, SKIPPED
 from testreport.models import STOPPED
@@ -240,6 +241,10 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
         launch_id = output['launch_id']
         launch = self._get_launch(launch_id)
         self.assertEqual(len(launch['tasks']), count + 1)
+        self.assertTrue(launch['build'])
+        self.assertFalse(launch['build']['version'])
+        self.assertFalse(launch['build']['hash'])
+        self.assertFalse(launch['build']['branch'])
 
     def test_execute_failure(self):
         test_plan = TestPlan.objects.get(name='DummyTestPlan')
@@ -248,6 +253,37 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
             test_plan.id,
             {'options': {'started_by': 'http://2gis.local/'}})
         self.assertIsNotNone(output.get('message'))
+
+    def test_execute_build_options(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+
+        self._create_launch_item({
+            'test_plan': test_plan.id,
+            'command': 'touch init_file',
+            'type': INIT_SCRIPT,
+            'timeout': 10,
+        })
+
+        count = random.choice([2, 3, 4, 5])
+        for x in range(0, count):
+            self._create_launch_item({
+                'test_plan': test_plan.id,
+                'command': 'touch file_'.format(x),
+                'type': ASYNC_CALL,
+                'timeout': 10,
+            })
+
+        output = self._tp_execute(
+            test_plan.id, {'options': {'started_by': 'http://2gis.local/',
+                                       'version': '123', 'hash': '123',
+                                       'branch': '123'}})
+        launch_id = output['launch_id']
+        launch = self._get_launch(launch_id)
+        self.assertEqual(len(launch['tasks']), count + 1)
+        self.assertTrue(launch['build'])
+        self.assertEqual(launch['build']['version'], '123')
+        self.assertEqual(launch['build']['hash'], '123')
+        self.assertEqual(launch['build']['branch'], '123')
 
     def test_deploy_script_duplication(self):
         test_plan = TestPlan.objects.get(name='DummyTestPlan')
@@ -455,6 +491,7 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
         launch = self._create_launch(test_plan.id)
         self.assertEqual(len(self.get_launches()['results']), 1)
         self.assertEqual(launch['test_plan'], test_plan.id)
+        self.assertFalse(launch['build'])
 
     def test_termination(self):
         test_plan = TestPlan.objects.get(name='DummyTestPlan')
@@ -513,6 +550,33 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
             'patch',
             'launches/{0}/'.format(launch['id']), {'duration': 360})
         self.assertEqual(360, response['duration'])
+
+    def test_build_filter(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+        Launch(test_plan=test_plan).save()
+        launch2 = Launch(test_plan=test_plan)
+        launch2.save()
+        Build(launch=launch2, version=123, branch=123, hash=123).save()
+        self.assertEqual(len(self.get_launches()['results']), 2)
+
+        response = self._call_rest(
+            'get', 'launches/custom_list/?version=123')
+        self.assertEqual(len(response['results']), 1)
+        self.assertEqual(response['results'][0]['id'], launch2.id)
+
+        response = self._call_rest(
+            'get', 'launches/custom_list/?branch=123')
+        self.assertEqual(len(response['results']), 1)
+        self.assertEqual(response['results'][0]['id'], launch2.id)
+
+        response = self._call_rest(
+            'get', 'launches/custom_list/?hash=123')
+        self.assertEqual(len(response['results']), 1)
+        self.assertEqual(response['results'][0]['id'], launch2.id)
+
+        response = self._call_rest(
+            'get', 'launches/custom_list/?version=333')
+        self.assertEqual(len(response['results']), 0)
 
 
 class TestResultApiTestCase(AbstractEntityApiTestCase):

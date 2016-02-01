@@ -147,6 +147,20 @@ class Launch(models.Model):
         return '{0} -> Launch: {1}'.format(self.test_plan, self.pk)
 
 
+class Build(models.Model):
+    launch = models.OneToOneField(Launch, related_name='build')
+    version = models.CharField(
+        max_length=128, default=None, null=True, blank=True)
+    hash = models.CharField(
+        max_length=128, default=None, null=True, blank=True)
+    branch = models.CharField(
+        max_length=128, default=None, null=True, blank=True)
+
+    def __str__(self):
+        return '{0} -> LaunchBuild: {1}/{2}/{3}'.format(
+            self.launch, self.version, self.hash, self. branch)
+
+
 class TestResult(models.Model):
     launch = models.ForeignKey(Launch)
     name = models.CharField(_('Name'), max_length=128, db_index=True)
