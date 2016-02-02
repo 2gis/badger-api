@@ -1298,6 +1298,10 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         launch = launches['results'][0]
         self.assertEqual(json.loads(data), launch['parameters'])
         self.assertEqual('user', launch['started_by'])
+        self.assertTrue(launch['build'])
+        self.assertFalse(launch['build']['version'])
+        self.assertFalse(launch['build']['hash'])
+        self.assertFalse(launch['build']['branch'])
 
     def test_empty_started_by(self):
         data = '{"env": {"BRANCH": "master"}}'
