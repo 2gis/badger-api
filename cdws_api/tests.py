@@ -560,23 +560,52 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
         self.assertEqual(len(self.get_launches()['results']), 2)
 
         response = self._call_rest(
-            'get', 'launches/custom_list/?version=123')
+            'get', 'launches/?build__version=123')
         self.assertEqual(len(response['results']), 1)
         self.assertEqual(response['results'][0]['id'], launch2.id)
 
         response = self._call_rest(
-            'get', 'launches/custom_list/?branch=123')
+            'get', 'launches/?build__branch=123')
         self.assertEqual(len(response['results']), 1)
         self.assertEqual(response['results'][0]['id'], launch2.id)
 
         response = self._call_rest(
-            'get', 'launches/custom_list/?hash=123')
+            'get', 'launches/?build__hash=123')
         self.assertEqual(len(response['results']), 1)
         self.assertEqual(response['results'][0]['id'], launch2.id)
 
         response = self._call_rest(
-            'get', 'launches/custom_list/?version=333')
+            'get', 'launches/?build__version=333')
         self.assertEqual(len(response['results']), 0)
+
+    def test_ids_in_filter(self):
+        project = Project.objects.get(name='DummyTestProject')
+        plan1 = TestPlan.objects.create(
+            name='DummyTestPlan2', project=project)
+        plan2 = TestPlan.objects.create(
+            name='DummyTestPlan2', project=project)
+        self._create_launch(plan1.id)
+        self._create_launch(plan2.id)
+
+        response = self._call_rest(
+            'get',
+            'launches/custom_list/?testplan_id__in={},{}'.format(
+                plan1.id, plan2.id))
+        self.assertEqual(len(response['results']), 2)
+
+    def test_days_filter(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+        self._create_launch(test_plan.id)
+
+        response = self._call_rest(
+            'get',
+            'launches/custom_list/?days=0')
+        self.assertEqual(len(response['results']), 0)
+
+        response = self._call_rest(
+            'get',
+            'launches/custom_list/?days=1')
+        self.assertEqual(len(response['results']), 1)
 
 
 class TestResultApiTestCase(AbstractEntityApiTestCase):

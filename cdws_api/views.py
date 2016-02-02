@@ -285,7 +285,8 @@ class LaunchViewSet(viewsets.ModelViewSet):
     queryset = Launch.objects.all()
     serializer_class = LaunchSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter, SearchFilter)
-    filter_fields = ('test_plan', 'id', 'created', 'state')
+    filter_fields = ('test_plan', 'id', 'created', 'state',
+                     'build__version', 'build__hash', 'build__branch')
     search_fields = ('started_by',)
 
     @detail_route(methods=['get'],
@@ -324,15 +325,10 @@ class LaunchViewSet(viewsets.ModelViewSet):
             delta = datetime.datetime.today() - datetime.timedelta(
                 days=int(request.GET['days']))
             self.queryset = self.queryset.filter(created__gt=delta)
-        if 'version' in request.GET:
+        if 'testplan_id__in' in request.GET \
+                and request.GET['testplan_id__in'] != '':
             self.queryset = self.queryset.filter(
-                build__version=request.GET['version'])
-        if 'hash' in request.GET:
-            self.queryset = self.queryset.filter(
-                build__hash=request.GET['hash'])
-        if 'branch' in request.GET:
-            self.queryset = self.queryset.filter(
-                build__branch=request.GET['branch'])
+                test_plan_id__in=request.GET['testplan_id__in'].split(','))
         return self.list(request, *args, **kwargs)
 
     @detail_route(methods=['get'],
