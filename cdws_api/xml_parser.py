@@ -1,4 +1,4 @@
-from testreport.models import Launch, TestResult
+from testreport.models import Launch, TestResult, Build
 from testreport.models import FINISHED
 from testreport.models import PASSED, FAILED, SKIPPED, BLOCKED
 
@@ -166,6 +166,11 @@ def xml_parser_func(format, testplan_id, file_content, launch_id, params):
         if 'options' in params_json \
                 and params_json['options']['started_by'] != '':
             launch.started_by = params_json['options']['started_by']
+            build = Build(launch=launch,
+                          version=params_json['options'].get('version'),
+                          branch=params_json['options'].get('branch'),
+                          hash=params_json['options'].get('hash'))
+            build.save()
 
     if format == 'nunit':
         parser = NunitParser(launch.id)
