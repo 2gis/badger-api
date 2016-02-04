@@ -329,6 +329,13 @@ class LaunchViewSet(viewsets.ModelViewSet):
                 and request.GET['testplan_id__in'] != '':
             self.queryset = self.queryset.filter(
                 test_plan_id__in=request.GET['testplan_id__in'].split(','))
+        if 'from' in request.GET:
+            from_date = request.GET['from']
+            to_date = datetime.datetime.today()
+            if 'to' in request.GET:
+                to_date = request.GET['to']
+            self.queryset = self.queryset.filter(
+                created__range=(from_date, to_date))
         return self.list(request, *args, **kwargs)
 
     @detail_route(methods=['get'],
