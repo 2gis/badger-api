@@ -23,6 +23,7 @@ from django.test.utils import override_settings
 
 from django.utils import timezone
 from datetime import timedelta
+from datetime import datetime
 
 import requests_mock
 import json
@@ -605,6 +606,24 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
         response = self._call_rest(
             'get',
             'launches/custom_list/?days=1')
+        self.assertEqual(len(response['results']), 1)
+
+    def test_from_to_filter(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+        self._create_launch(test_plan.id)
+        today = datetime.today()
+
+        response = self._call_rest(
+            'get',
+            'launches/custom_list/?from={}&to={}'.format(
+                today.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d')))
+        self.assertEqual(len(response['results']), 0)
+
+        response = self._call_rest(
+            'get',
+            'launches/custom_list/?from={}&to={}'.format(
+                today.strftime('%Y-%m-%d'),
+                (today + timedelta(days=1)).strftime('%Y-%m-%d')))
         self.assertEqual(len(response['results']), 1)
 
 
