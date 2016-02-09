@@ -1242,6 +1242,12 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
             'get',
             'testresults/?launch={}&state={}'.format(launch['id'], PASSED))
         self.assertEqual(2, failed['count'])
+        self.assertEqual(
+            'Failure message',
+            failed['results'][0]['failure_reason'])
+        self.assertEqual(
+            'Error messageSystem-out',
+            failed['results'][1]['failure_reason'])
         self.assertEqual(1, skipped['count'])
         self.assertEqual(1, passed['count'])
         self.assertEqual(0.4, launch['duration'])
