@@ -93,9 +93,10 @@ class JunitParser(XmlParser):
         if error is not None:
             result.state = FAILED
             result.failure_reason = self.get_text(error.childNodes)
-        system_out = self.get_node(element, 'system-out')
-        if system_out is not None:
-            result.failure_reason += self.get_text(system_out.childNodes)
+        if not element.getAttribute('format'):
+            system_out = self.get_node(element, 'system-out')
+            if system_out is not None:
+                result.failure_reason += self.get_text(system_out.childNodes)
 
         result.save()
 
