@@ -87,15 +87,12 @@ class JunitParser(XmlParser):
         skipped = self.get_node(element, ['skipped'])
         if skipped is not None:
             result.state = SKIPPED
-            result.failure_reason = 'Type: {0} : {1}'.format(
-                skipped.getAttribute('type'),
-                self.get_text(skipped.childNodes))
+            result.failure_reason = self.get_text(skipped.childNodes)
         else:
             result.state = PASSED
         if error is not None:
             result.state = FAILED
-            result.failure_reason = 'Type: {0} : {1}'.format(
-                error.getAttribute('type'), self.get_text(error.childNodes))
+            result.failure_reason = self.get_text(error.childNodes)
         system_out = self.get_node(element, 'system-out')
         if system_out is not None:
             result.failure_reason += self.get_text(system_out.childNodes)

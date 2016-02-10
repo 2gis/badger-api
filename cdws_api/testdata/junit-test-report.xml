@@ -6,7 +6,7 @@
       <failure>Failure message</failure>
     </testcase>
     <testcase name="failedTest" class="Test" time="0.1">
-      <error>Error message</error>
+      <error type="Error">Error message</error>
       <system-out>System-out</system-out>
     </testcase>
     <testcase name="skippedTest" class="Test" time="0.1">
