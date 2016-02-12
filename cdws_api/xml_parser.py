@@ -53,7 +53,8 @@ class XmlParser:
 
     def update_duration(self, launch):
         log.info('Updating total duration for launch {}'.format(launch.id))
-        launch.duration = self.total_duration
+        if launch.duration is None:
+            launch.duration = self.total_duration
         launch.save()
 
 
@@ -163,6 +164,8 @@ def xml_parser_func(format, testplan_id, file_content, launch_id, params):
         params_json = json.loads(params)
         if 'options' in params_json \
                 and params_json['options']['started_by'] != '':
+            if params_json['options'].get('duration') is not None:
+                launch.duration = float(params_json['options']['duration'])
             launch.started_by = params_json['options']['started_by']
             build = Build(launch=launch,
                           version=params_json['options'].get('version'),

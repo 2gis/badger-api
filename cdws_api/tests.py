@@ -1337,7 +1337,8 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
 
     def test_additional_information(self):
         data = \
-            '{"env": {"BRANCH": "master"}, "options": {"started_by": "user"}}'
+            '{"env": {"BRANCH": "master"}, "options": {"started_by": "user",' \
+            '"duration": "120.20"}}'
         project = Project.objects.create(name='DummyTestProject')
         testplan = TestPlan.objects.create(name='DummyTestPlan',
                                            project=project)
@@ -1356,6 +1357,7 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         self.assertFalse(launch['build']['version'])
         self.assertFalse(launch['build']['hash'])
         self.assertFalse(launch['build']['branch'])
+        self.assertEqual(120.2, launch['duration'])
 
     def test_empty_started_by(self):
         data = '{"env": {"BRANCH": "master"}}'
