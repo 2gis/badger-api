@@ -11,7 +11,9 @@ from datetime import datetime, timedelta
 log = logging.getLogger(__name__)
 
 
-def request_jira_api(query, fields=None, max_results=500, expand=None):
+def request_jira_api(query, fields=None,
+                     max_results=settings.TRACKING_SYSTEM_MAX_RESULTS,
+                     expand=None):
     url = 'https://{}{}'.format(
         settings.BUG_TRACKING_SYSTEM_HOST,
         settings.TRACKING_SYSTEM_SEARCH_PATH)
