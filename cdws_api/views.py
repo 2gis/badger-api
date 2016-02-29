@@ -761,15 +761,15 @@ class ReportFileViewSet(APIView):
             params = request.data['data']
         file_obj = request.data['file']
         try:
-            xml_parser_func(testplan_id=testplan_id,
-                            format=xunit_format,
-                            file_content=file_obj.read(),
-                            launch_id=launch_id,
-                            params=params)
+            data = xml_parser_func(testplan_id=testplan_id,
+                                   format=xunit_format,
+                                   file_content=file_obj.read(),
+                                   launch_id=launch_id,
+                                   params=params)
         except Exception as e:
             log.error(e)
             return Response(
-                status=400,
+                status=status.HTTP_400_BAD_REQUEST,
                 data={'message': 'Xml file couldn\'t be parsed: {}'.format(e)})
 
-        return Response(status=204)
+        return Response(status=status.HTTP_200_OK, data=data)

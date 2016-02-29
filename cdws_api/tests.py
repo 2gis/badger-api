@@ -1359,6 +1359,38 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         self.assertFalse(launch['build']['branch'])
         self.assertEqual(120.2, launch['duration'])
 
+    def test_additional_information_to_existent_launch(self):
+        data = \
+            '{"env": {"BRANCH": "master"}, "options": {"started_by": "user",' \
+            '"duration": "120.20"}}'
+        project = Project.objects.create(name='DummyTestProject')
+        testplan = TestPlan.objects.create(name='DummyTestPlan',
+                                           project=project)
+        launch = Launch.objects.create(test_plan=testplan)
+        self._post(file_name='junit-test-report.xml',
+                   data={'launch': launch.id, 'data': data},
+                   url='{}/junit/junit.xml'.format(testplan.id))
+        self._post(file_name='junit-test-report.xml',
+                   data={'launch': launch.id, 'data': data},
+                   url='{}/junit/junit.xml'.format(testplan.id))
+
+        launches = self._call_rest('get',
+                                   'launches/?testplan={}'.format(testplan.id))
+        self.assertEqual(1, launches['count'])
+        launch = launches['results'][0]
+        self.assertEqual(json.loads(data), launch['parameters'])
+        self.assertEqual('user', launch['started_by'])
+        self.assertTrue(launch['build'])
+        self.assertFalse(launch['build']['version'])
+        self.assertFalse(launch['build']['hash'])
+        self.assertFalse(launch['build']['branch'])
+        self.assertEqual(120.2, launch['duration'])
+
+        failed = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], FAILED))
+        self.assertEqual(4, failed['count'])
+
     def test_empty_started_by(self):
         data = '{"env": {"BRANCH": "master"}}'
         project = Project.objects.create(name='DummyTestProject')
