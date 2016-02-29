@@ -159,7 +159,7 @@ def xml_parser_func(format, testplan_id, file_content, launch_id, params):
             launch = get_launch(launch_id)
         else:
             launch = create_launch(testplan_id)
-    if params is not None:
+    if params is not None and launch.parameters == '{}':
         launch.parameters = params
         params_json = json.loads(params)
         if 'options' in params_json \
@@ -181,4 +181,4 @@ def xml_parser_func(format, testplan_id, file_content, launch_id, params):
     parser.load_string(file_content)
     parser.update_duration(launch)
     launch.calculate_counts()
-    return 'Done'
+    return {'launch_id': launch.id}
