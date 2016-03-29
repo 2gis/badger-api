@@ -195,6 +195,25 @@ CELERY_QUEUES = (
     Queue('launcher', Exchange('launcher'), routing_key='launcher')
 )
 
+CELERY_ROUTES = {
+    'testreport.tasks.finalize_launch': {
+        'queue': 'launcher',
+        'routing_key': 'launcher',
+    },
+    'testreport.tasks.create_environment': {
+        'queue': 'launcher',
+        'routing_key': 'launcher',
+    },
+    'testreport.tasks.finalize_broken_launches': {
+        'queue': 'launcher',
+        'routing_key': 'launcher',
+    },
+    'common.tasks.launch_process': {
+        'queue': 'launcher',
+        'routing_key': 'launcher',
+    },
+}
+
 JIRA_INTEGRATION = os.environ.get('JIRA_INTEGRATION', False)
 # if JIRA_INTEGRATION = True, please fill constants below
 TIME_BEFORE_UPDATE_BUG_INFO = os.environ.get(
