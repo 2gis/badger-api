@@ -19,7 +19,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-@celery.task()
+@celery.task(queue='launcher')
 def finalize_launch(launch_id, state=FINISHED, timeout=30, tries=5):
     log.info("Finalize launch {}".format(launch_id))
     launch = Launch.objects.get(pk=launch_id)
@@ -44,7 +44,7 @@ def finalize_launch(launch_id, state=FINISHED, timeout=30, tries=5):
         "Updated launch: {}".format(Launch.objects.get(pk=launch_id).__dict__))
 
 
-@celery.task()
+@celery.task(queue='launcher')
 def create_environment(environment_vars, json_file):
     workspace_path = environment_vars['WORKSPACE']
     # Create workspace directory
@@ -67,7 +67,7 @@ def create_environment(environment_vars, json_file):
         f.write(output)
 
 
-@celery.task()
+@celery.task(queue='launcher')
 def finalize_broken_launches():
     log.debug("Finalize broke launches...")
 

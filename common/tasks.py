@@ -23,7 +23,7 @@ def kill_proc_tree(pid, including_parent=True):
         parent.wait(5)
 
 
-@celery.task(time_limit=43200)
+@celery.task(time_limit=43200, queue='launcher')
 def launch_process(cmd, env={}):
     pid = None
 

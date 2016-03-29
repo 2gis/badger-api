@@ -2,6 +2,8 @@ import os
 import sys
 import dj_database_url
 
+from kombu import Exchange, Queue
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
     'SECRET_KEY',
@@ -183,6 +185,15 @@ CELERY_USER = 'ubuntu'
 CELERY_TRACK_STARTED = True
 CELERY_CHORD_PROPAGATES = True
 CELERY_RESULT_ENGINE_OPTIONS = {'pool_recycle': 3600}
+
+# celery queues setup
+CELERY_DEFAULT_QUEUE = 'default'
+CELERY_DEFAULT_EXCHANGE_TYPE = 'direct'
+CELERY_DEFAULT_ROUTING_KEY = 'default'
+CELERY_QUEUES = (
+    Queue('default', Exchange('default'), routing_key='default'),
+    Queue('launcher', Exchange('launcher'), routing_key='launcher')
+)
 
 JIRA_INTEGRATION = os.environ.get('JIRA_INTEGRATION', False)
 # if JIRA_INTEGRATION = True, please fill constants below
