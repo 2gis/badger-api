@@ -1,4 +1,5 @@
 cmd: gunicorn pycd.wsgi --config config.py -b 0.0.0.0:8000
-worker: python manage.py celery worker -O fair -l DEBUG
+default_worker: python manage.py celery worker -Q default -l DEBUG
+launcher_worker: python manage.py celery worker -Q launcher -l DEBUG
 beat: python manage.py celery beat -S djcelery.schedulers.DatabaseScheduler
 
