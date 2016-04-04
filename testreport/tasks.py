@@ -4,11 +4,17 @@ from testreport.models import Launch, FINISHED, STOPPED, CELERY_FINISHED_STATES
 from testreport.models import Bug
 from testreport.models import get_issue_fields_from_bts
 
+from cdws_api.xml_parser import xml_parser_func
+
+from common.storage import get_s3_connection
+from comments.models import Comment
+
 import celery
 
 import os
 import stat
 import json
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.conf import settings
 from datetime import timedelta, datetime
@@ -147,3 +153,35 @@ def update_state(bug):
             get_issue_fields_from_bts(bug.externalId)['status']['name']
         log.debug('Saving bug "{}"'.format(bug.externalId))
         bug.save()
+
+
+@celery.task()
+def parse_xml(xunit_format, launch_id, params,
+              s3_conn=False, s3_key_name=None, file_content=None):
+    if s3_conn:
+        s3_connection = get_s3_connection()
+        bucket = s3_connection.get_bucket(settings.S3_BUCKET_NAME)
+        report = bucket.get_key(s3_key_name)
+        file_content = report.read()
+
+    log.info('Start parsing xml {}'.format(s3_key_name))
+    try:
+        xml_parser_func(format=xunit_format,
+                        file_content=file_content,
+                        launch_id=launch_id,
+                        params=params)
+        log.info('Xml parsed successful')
+    except Exception as e:
+        log.error(e)
+        Comment.objects.create(comment=e,
+                               object_pk=launch_id,
+                               content_type_id=17,
+                               user=User.objects.get(username='xml-parser'))
+
+    if s3_conn:
+        finalize_launch(launch_id=launch_id)
+        bucket.delete_key(s3_key_name)
+        log.info('Xml file "{}" deleted'.format(s3_key_name))
+    else:
+        launch = Launch.objects.get(pk=launch_id)
+        launch.calculate_counts()

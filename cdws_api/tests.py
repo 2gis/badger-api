@@ -1199,6 +1199,7 @@ class MetricsApiTestCase(AbstractEntityApiTestCase):
         self.assertEqual(1, len(CrontabSchedule.objects.all()))
 
 
+@override_settings(S3_ACCESS_KEY=None, S3_SECRET_KEY=None, S3_HOST=None)
 class ReportFileApiTestCase(AbstractEntityApiTestCase):
     def _post(self, file_name, url, data=None):
         auth = '{}:{}'.format(self.user_login, self.user_plain_password)
@@ -1296,8 +1297,18 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
                                            project=project)
         response = self._post(file_name='empty-test-report.xml',
                               url='{}/nunit/nunit.xml'.format(testplan.id))
-        self.assertTrue(response['message'].startswith(
-            'Xml file couldn\'t be parsed'))
+        launches = self._call_rest('get',
+                                   'launches/?testplan={}'.format(testplan.id))
+        self.assertEqual(1, launches['count'])
+        launch = launches['results'][0]
+        self.assertEqual(response, {'launch_id': launch['id']})
+
+        comments = self._call_rest('get', 'comments/')
+        self.assertEqual(1, comments['count'])
+        comment = comments['results'][0]
+        self.assertEqual(comment['comment'],
+                         'no element found: line 1, column 0')
+        self.assertEqual(comment['user_data']['username'], 'xml-parser')
 
     def test_upload_unknown_file(self):
         project = Project.objects.create(name='DummyTestProject')

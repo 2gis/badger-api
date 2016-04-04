@@ -17,3 +17,4 @@ psutil==3.2.2
 defusedxml==0.4.1
 djangorestframework-xml==1.2.0
 whitenoise==2.0.6
+boto

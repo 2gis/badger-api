@@ -241,3 +241,9 @@ STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            os.environ.get('STATIC_ROOT', 'static'))
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
+# amazon s3
+S3_ACCESS_KEY = os.environ.get('S3_ACCESS_KEY')
+S3_SECRET_KEY = os.environ.get('S3_SECRET_KEY')
+S3_HOST = os.environ.get('S3_HOST')
+S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'xml-reports')
