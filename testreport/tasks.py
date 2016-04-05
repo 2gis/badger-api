@@ -6,7 +6,7 @@ from testreport.models import get_issue_fields_from_bts
 
 from cdws_api.xml_parser import xml_parser_func
 
-from common.storage import get_s3_connection
+from common.storage import get_s3_connection, get_bucket
 from comments.models import Comment
 
 import celery
@@ -158,14 +158,13 @@ def update_state(bug):
 @celery.task()
 def parse_xml(xunit_format, launch_id, params,
               s3_conn=False, s3_key_name=None, file_content=None):
-    if s3_conn:
-        s3_connection = get_s3_connection()
-        bucket = s3_connection.get_bucket(settings.S3_BUCKET_NAME)
-        report = bucket.get_key(s3_key_name)
-        file_content = report.read()
-
-    log.info('Start parsing xml {}'.format(s3_key_name))
     try:
+        if s3_conn:
+            s3_connection = get_s3_connection()
+            file_content = \
+                get_file_from_storage(s3_connection, s3_key_name).read()
+
+        log.info('Start parsing xml {}'.format(s3_key_name))
         xml_parser_func(format=xunit_format,
                         file_content=file_content,
                         launch_id=launch_id,
@@ -180,8 +179,22 @@ def parse_xml(xunit_format, launch_id, params,
 
     if s3_conn:
         finalize_launch(launch_id=launch_id)
-        bucket.delete_key(s3_key_name)
+        delete_file_from_storage(s3_connection, s3_key_name)
         log.info('Xml file "{}" deleted'.format(s3_key_name))
     else:
         launch = Launch.objects.get(pk=launch_id)
         launch.calculate_counts()
+
+
+def delete_file_from_storage(s3_connection, file_name):
+    bucket = get_bucket(s3_connection)
+    bucket.delete_key(file_name)
+
+
+def get_file_from_storage(s3_connection, file_name):
+    bucket = get_bucket(s3_connection)
+    report = bucket.get_key(file_name)
+    if report is None:
+        raise Exception('There is no xml file in bucket "{}"'.
+                        format(settings.S3_BUCKET_NAME))
+    return report

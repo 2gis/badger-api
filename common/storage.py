@@ -13,3 +13,11 @@ def get_s3_connection():
             is_secure=False,
             calling_format=boto.s3.connection.OrdinaryCallingFormat())
     return None
+
+
+def create_bucket(s3_connection):
+    return s3_connection.create_bucket(settings.S3_BUCKET_NAME)
+
+
+def get_bucket(s3_connection):
+    return s3_connection.get_bucket(settings.S3_BUCKET_NAME)
