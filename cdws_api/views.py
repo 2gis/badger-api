@@ -23,7 +23,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 
 from rest_framework_bulk import ListBulkCreateAPIView
 
-from common.storage import get_s3_connection, create_bucket
+from common.storage import get_s3_connection, get_or_create_bucket
 from common.models import Project, Settings
 from common.tasks import launch_process
 from testreport.tasks import create_environment
@@ -786,7 +786,7 @@ class ReportFileViewSet(APIView):
             if s3_connection is not None:
                 log.info('Get s3 connection')
 
-                bucket = create_bucket(s3_connection)
+                bucket = get_or_create_bucket(s3_connection)
                 report_key = bucket.new_key(int(time.time()))
                 report_key.set_contents_from_string(file_obj.read())
 

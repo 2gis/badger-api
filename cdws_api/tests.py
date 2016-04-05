@@ -1307,7 +1307,9 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         self.assertEqual(1, comments['count'])
         comment = comments['results'][0]
         self.assertEqual(comment['comment'],
-                         'no element found: line 1, column 0')
+                         'During xml parsing the following '
+                         'error is received: "no element found: '
+                         'line 1, column 0"')
         self.assertEqual(comment['user_data']['username'], 'xml-parser')
 
     def test_upload_unknown_file(self):

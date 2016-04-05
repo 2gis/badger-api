@@ -6,7 +6,7 @@ from testreport.models import get_issue_fields_from_bts
 
 from cdws_api.xml_parser import xml_parser_func
 
-from common.storage import get_s3_connection, get_bucket
+from common.storage import get_s3_connection, get_or_create_bucket
 from comments.models import Comment
 
 import celery
@@ -172,7 +172,9 @@ def parse_xml(xunit_format, launch_id, params,
         log.info('Xml parsed successful')
     except Exception as e:
         log.error(e)
-        Comment.objects.create(comment=e,
+        comment = 'During xml parsing the ' \
+                  'following error is received: "{}"'.format(e)
+        Comment.objects.create(comment=comment,
                                object_pk=launch_id,
                                content_type_id=17,
                                user=User.objects.get(username='xml-parser'))
@@ -187,14 +189,14 @@ def parse_xml(xunit_format, launch_id, params,
 
 
 def delete_file_from_storage(s3_connection, file_name):
-    bucket = get_bucket(s3_connection)
+    bucket = get_or_create_bucket(s3_connection)
     bucket.delete_key(file_name)
 
 
 def get_file_from_storage(s3_connection, file_name):
-    bucket = get_bucket(s3_connection)
+    bucket = get_or_create_bucket(s3_connection)
     report = bucket.get_key(file_name)
     if report is None:
-        raise Exception('There is no xml file in bucket "{}"'.
+        raise Exception('Xml not found in bucket "{}"'.
                         format(settings.S3_BUCKET_NAME))
     return report

@@ -15,9 +15,8 @@ def get_s3_connection():
     return None
 
 
-def create_bucket(s3_connection):
-    return s3_connection.create_bucket(settings.S3_BUCKET_NAME)
-
-
-def get_bucket(s3_connection):
-    return s3_connection.get_bucket(settings.S3_BUCKET_NAME)
+def get_or_create_bucket(s3_connection):
+    bucket = s3_connection.get_bucket(settings.S3_BUCKET_NAME)
+    if bucket is None:
+        bucket = s3_connection.create_bucket(settings.S3_BUCKET_NAME)
+    return bucket
