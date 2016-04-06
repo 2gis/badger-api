@@ -23,6 +23,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 
 from rest_framework_bulk import ListBulkCreateAPIView
 
+from common.storage import get_s3_connection, get_or_create_bucket
 from common.models import Project, Settings
 from common.tasks import launch_process
 from testreport.tasks import create_environment
@@ -38,8 +39,6 @@ from cdws_api.serializers import BugSerializer
 from cdws_api.serializers import StageSerializer
 from cdws_api.serializers import MetricSerializer, MetricValueSerializer
 
-from cdws_api.xml_parser import xml_parser_func
-
 from testreport.models import TestPlan
 from testreport.models import Launch
 from testreport.models import Build
@@ -47,7 +46,7 @@ from testreport.models import TestResult
 from testreport.models import LaunchItem
 from testreport.models import Bug
 from testreport.models import INITIALIZED, ASYNC_CALL, INIT_SCRIPT, CONCLUSIVE
-from testreport.models import STOPPED
+from testreport.models import STOPPED, IN_PROGRESS, FINISHED
 from testreport.models import get_issue_fields_from_bts
 
 from stages.models import Stage
@@ -57,6 +56,7 @@ from metrics.handlers import HANDLER_CHOICES
 from metrics.tasks import restore_metric_values
 
 from testreport.tasks import finalize_launch
+from testreport.tasks import parse_xml
 
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
@@ -71,10 +71,13 @@ from django.conf import settings
 from pycd.celery import app
 
 import datetime
+import time
 import logging
 import celery
 import copy
 import os
+import socket
+
 
 log = logging.getLogger(__name__)
 
@@ -746,7 +749,19 @@ class ReportFileViewSet(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly, )
     parser_classes = (FileUploadParser,)
 
+    def get_launch(self, launch_id):
+        return Launch.objects.get(id=launch_id)
+
+    def create_launch(self, plan_id, state):
+        launch = Launch.objects.create(
+            test_plan_id=plan_id, state=state,
+            started_by='http://{}'.format(socket.getfqdn()))
+        return launch
+
     def post(self, request, filename, testplan_id=None, xunit_format=None):
+        s3_connection = get_s3_connection()
+        file_obj = request.data['file']
+
         launch_id = None
         params = None
         if xunit_format not in ['junit', 'nunit']:
@@ -759,17 +774,35 @@ class ReportFileViewSet(APIView):
             launch_id = request.data['launch']
         if 'data' in request.data and request.data['data'] != '':
             params = request.data['data']
-        file_obj = request.data['file']
-        try:
-            data = xml_parser_func(testplan_id=testplan_id,
-                                   format=xunit_format,
-                                   file_content=file_obj.read(),
-                                   launch_id=launch_id,
-                                   params=params)
-        except Exception as e:
-            log.error(e)
-            return Response(
-                status=status.HTTP_400_BAD_REQUEST,
-                data={'message': 'Xml file couldn\'t be parsed: {}'.format(e)})
 
-        return Response(status=status.HTTP_200_OK, data=data)
+        log.info('Create launch')
+        if testplan_id is not None:
+            state = IN_PROGRESS if s3_connection is not None else FINISHED
+            if launch_id is not None:
+                launch = self.get_launch(launch_id)
+            else:
+                launch = self.create_launch(testplan_id, state=state)
+
+            if s3_connection is not None:
+                bucket = get_or_create_bucket(s3_connection)
+                report_key = bucket.new_key(int(time.time()))
+                report_key.set_contents_from_string(file_obj.read())
+
+                log.debug('Xml file "{}" created in bucket "{}"'.format(
+                    report_key.name, settings.S3_BUCKET_NAME))
+
+                parse_xml.apply_async(kwargs={'s3_conn': True,
+                                              's3_key_name': report_key.name,
+                                              'xunit_format': xunit_format,
+                                              'launch_id': launch.id,
+                                              'params': params})
+            else:
+                log.info('Connection to storage is not set in settings, '
+                         'parse xml synchronously')
+                parse_xml(xunit_format=xunit_format,
+                          launch_id=launch.id,
+                          params=params,
+                          file_content=file_obj.read())
+            return Response(status=status.HTTP_200_OK,
+                            data={'launch_id': launch.id})
+        return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -153,12 +153,8 @@ class NunitParser(XmlParser):
         result.save()
 
 
-def xml_parser_func(format, testplan_id, file_content, launch_id, params):
-    if testplan_id is not None:
-        if launch_id is not None:
-            launch = get_launch(launch_id)
-        else:
-            launch = create_launch(testplan_id)
+def xml_parser_func(format, file_content, launch_id, params):
+    launch = get_launch(launch_id)
     if params is not None and launch.parameters == '{}':
         launch.parameters = params
         params_json = json.loads(params)
@@ -180,5 +176,3 @@ def xml_parser_func(format, testplan_id, file_content, launch_id, params):
 
     parser.load_string(file_content)
     parser.update_duration(launch)
-    launch.calculate_counts()
-    return {'launch_id': launch.id}
