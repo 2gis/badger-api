@@ -247,3 +247,5 @@ S3_ACCESS_KEY = os.environ.get('S3_ACCESS_KEY')
 S3_SECRET_KEY = os.environ.get('S3_SECRET_KEY')
 S3_HOST = os.environ.get('S3_HOST')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'xml-reports')
+S3_MAX_RETRIES = os.environ.get('S3_MAX_RETRIES', 2)
+S3_COUNTDOWN = os.environ.get('S3_COUNTDOWN', 900)  # in seconds

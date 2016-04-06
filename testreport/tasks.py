@@ -155,14 +155,18 @@ def update_state(bug):
         bug.save()
 
 
-@celery.task()
-def parse_xml(xunit_format, launch_id, params,
-              s3_conn=False, s3_key_name=None, file_content=None):
+@celery.task(bind=True)
+def parse_xml(self, xunit_format, launch_id, params, s3_conn=False,
+              s3_key_name=None, file_content=None):
     try:
         if s3_conn:
+            log.info('Trying to connect to {}'.format(settings.S3_HOST))
             s3_connection = get_s3_connection()
+            log.info('Connect to {} set up'.format(settings.S3_HOST))
+            log.info('Trying to get file from {}'.format(settings.S3_HOST))
             file_content = \
                 get_file_from_storage(s3_connection, s3_key_name).read()
+            log.info('Getting file is successful')
 
         log.info('Start parsing xml {}'.format(s3_key_name))
         xml_parser_func(format=xunit_format,
@@ -170,14 +174,27 @@ def parse_xml(xunit_format, launch_id, params,
                         launch_id=launch_id,
                         params=params)
         log.info('Xml parsed successful')
+    except ConnectionRefusedError as e:
+        log.error(e)
+        comment = 'There are some problems with ' \
+                  'connection to {}: "{}". '.format(settings.S3_HOST, e)
+
+        if parse_xml.request.retries < settings.S3_MAX_RETRIES:
+            comment += 'Next try in {} min.'.\
+                format(int(settings.S3_COUNTDOWN / 60))
+
+            add_comment_to_launch(launch_id, comment)
+            return self.retry(countdown=settings.S3_COUNTDOWN,
+                              throw=False, exc=e)
+
+        comment += 'Please, try to send your xml later.'
+        add_comment_to_launch(launch_id=launch_id, comment=comment)
     except Exception as e:
         log.error(e)
+
         comment = 'During xml parsing the ' \
                   'following error is received: "{}"'.format(e)
-        Comment.objects.create(comment=comment,
-                               object_pk=launch_id,
-                               content_type_id=17,
-                               user=User.objects.get(username='xml-parser'))
+        add_comment_to_launch(launch_id, comment)
 
     if s3_conn:
         finalize_launch(launch_id=launch_id)
@@ -200,3 +217,10 @@ def get_file_from_storage(s3_connection, file_name):
         raise Exception('Xml not found in bucket "{}"'.
                         format(settings.S3_BUCKET_NAME))
     return report
+
+
+def add_comment_to_launch(launch_id, comment):
+    Comment.objects.create(comment=comment,
+                           object_pk=launch_id,
+                           content_type_id=17,
+                           user=User.objects.get(username='xml-parser'))
