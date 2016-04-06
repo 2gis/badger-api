@@ -160,9 +160,7 @@ def parse_xml(self, xunit_format, launch_id, params, s3_conn=False,
               s3_key_name=None, file_content=None):
     try:
         if s3_conn:
-            log.info('Trying to connect to {}'.format(settings.S3_HOST))
             s3_connection = get_s3_connection()
-            log.info('Connect to {} set up'.format(settings.S3_HOST))
             log.info('Trying to get file from {}'.format(settings.S3_HOST))
             file_content = \
                 get_file_from_storage(s3_connection, s3_key_name).read()

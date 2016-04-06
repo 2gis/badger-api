@@ -784,8 +784,6 @@ class ReportFileViewSet(APIView):
                 launch = self.create_launch(testplan_id, state=state)
 
             if s3_connection is not None:
-                log.info('Get s3 connection')
-
                 bucket = get_or_create_bucket(s3_connection)
                 report_key = bucket.new_key(int(time.time()))
                 report_key.set_contents_from_string(file_obj.read())
@@ -799,8 +797,8 @@ class ReportFileViewSet(APIView):
                                               'launch_id': launch.id,
                                               'params': params})
             else:
-                log.info('S3 connection is not available, '
-                         'parse xml without creating file')
+                log.info('Connection to storage is not set in settings, '
+                         'parse xml synchronously')
                 parse_xml(xunit_format=xunit_format,
                           launch_id=launch.id,
                           params=params,
