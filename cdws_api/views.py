@@ -788,7 +788,7 @@ class ReportFileViewSet(APIView):
                 report_key = bucket.new_key(int(time.time()))
                 report_key.set_contents_from_string(file_obj.read())
 
-                log.info('Xml file "{}" created in bucket "{}"'.format(
+                log.debug('Xml file "{}" created in bucket "{}"'.format(
                     report_key.name, settings.S3_BUCKET_NAME))
 
                 parse_xml.apply_async(kwargs={'s3_conn': True,

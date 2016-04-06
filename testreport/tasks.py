@@ -161,17 +161,17 @@ def parse_xml(self, xunit_format, launch_id, params, s3_conn=False,
     try:
         if s3_conn:
             s3_connection = get_s3_connection()
-            log.info('Trying to get file from {}'.format(settings.S3_HOST))
+            log.debug('Trying to get file from {}'.format(settings.S3_HOST))
             file_content = \
                 get_file_from_storage(s3_connection, s3_key_name).read()
-            log.info('Getting file is successful')
+            log.debug('Getting file is successful')
 
-        log.info('Start parsing xml {}'.format(s3_key_name))
+        log.debug('Start parsing xml {}'.format(s3_key_name))
         xml_parser_func(format=xunit_format,
                         file_content=file_content,
                         launch_id=launch_id,
                         params=params)
-        log.info('Xml parsed successful')
+        log.debug('Xml parsed successful')
     except ConnectionRefusedError as e:
         log.error(e)
         comment = 'There are some problems with ' \
@@ -197,7 +197,7 @@ def parse_xml(self, xunit_format, launch_id, params, s3_conn=False,
     if s3_conn:
         finalize_launch(launch_id=launch_id)
         delete_file_from_storage(s3_connection, s3_key_name)
-        log.info('Xml file "{}" deleted'.format(s3_key_name))
+        log.debug('Xml file "{}" deleted'.format(s3_key_name))
     else:
         launch = Launch.objects.get(pk=launch_id)
         launch.calculate_counts()
