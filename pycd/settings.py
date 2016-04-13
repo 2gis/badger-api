@@ -249,3 +249,5 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'xml-reports')
 S3_SECURE_CONNECTION = os.environ.get('S3_SECURE_CONNECTION', False)
 S3_MAX_RETRIES = os.environ.get('S3_MAX_RETRIES', 2)
 S3_COUNTDOWN = os.environ.get('S3_COUNTDOWN', 900)  # in seconds
+
+LAST_COMMITS_SIZE = os.environ.get('LAST_COMMITS_SIZE', 100)

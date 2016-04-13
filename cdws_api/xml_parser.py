@@ -2,6 +2,8 @@ from testreport.models import Launch, TestResult, Build
 from testreport.models import FINISHED
 from testreport.models import PASSED, FAILED, SKIPPED, BLOCKED
 
+from django.conf import settings
+
 import datetime
 import logging
 import socket
@@ -163,10 +165,24 @@ def xml_parser_func(format, file_content, launch_id, params):
             if params_json['options'].get('duration') is not None:
                 launch.duration = float(params_json['options']['duration'])
             launch.started_by = params_json['options']['started_by']
-            build = Build(launch=launch,
-                          version=params_json['options'].get('version'),
-                          branch=params_json['options'].get('branch'),
-                          hash=params_json['options'].get('hash'))
+
+            commits = params_json['options'].get('last_commits')
+            if commits is not None \
+                    and len(commits) > settings.LAST_COMMITS_SIZE:
+                commits = commits[:settings.LAST_COMMITS_SIZE]
+
+            build_hash = params_json['options'].get('hash')
+            if build_hash is None and commits is not None:
+                build_hash = commits[0]
+
+            build = Build(
+                launch=launch,
+                version=params_json['options'].get('version'),
+                branch=params_json['options'].get('branch'),
+                hash=build_hash,
+                commit_message=params_json['options'].get('commit_message'),
+                commit_author=params_json['options'].get('commit_author'))
+            build.set_last_commits(commits)
             build.save()
 
     if format == 'nunit':

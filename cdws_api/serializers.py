@@ -84,9 +84,12 @@ class TasksResultField(serializers.DictField):
 
 
 class BuildSerializer(serializers.ModelSerializer):
+    last_commits = serializers.ReadOnlyField(source='get_last_commits')
+
     class Meta:
         model = Build
-        fields = ('version', 'hash', 'branch')
+        fields = ('version', 'hash', 'branch', 'last_commits',
+                  'commit_message', 'commit_author')
 
 
 class LaunchSerializer(serializers.ModelSerializer):

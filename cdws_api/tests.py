@@ -626,6 +626,31 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
                 (today + timedelta(days=1)).strftime('%Y-%m-%d')))
         self.assertEqual(len(response['results']), 1)
 
+    def test_build_in_filter(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+        launch1 = self._create_launch(test_plan.id)
+        launch2 = self._create_launch(test_plan.id)
+        launch3 = self._create_launch(test_plan.id)
+        launch4 = self._create_launch(test_plan.id)
+
+        Build(launch_id=launch1['id'], hash='c2').save()
+        Build(launch_id=launch3['id'], hash='c3').save()
+        Build(launch_id=launch4['id'], hash='c2').save()
+        build = Build(launch_id=launch2['id'], hash='c1')
+        build.set_last_commits(['c1', 'c2'])
+        build.save()
+
+        self.assertEqual(len(self.get_launches()['results']), 4)
+
+        response = self._call_rest(
+            'get', 'launches/custom_list/?build_hash__in=c1,c2')
+        self.assertEqual(len(response['results']), 3)
+        ids = []
+        for res in response['results']:
+            ids.append(res['id'])
+        ids.sort()
+        self.assertEqual(ids, [launch1['id'], launch2['id'], launch4['id']])
+
 
 class TestResultApiTestCase(AbstractEntityApiTestCase):
     def setUp(self):
@@ -1437,3 +1462,40 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         launch = launches['results'][0]
         self.assertFalse(launch['parameters'])
         self.assertFalse(launch['started_by'])
+
+    def test_hash_from_last_commits(self):
+        data = \
+            '{"env": {"BRANCH": "master"}, "options": {"started_by": "user",' \
+            '"last_commits": ["c1","c2","c3"]}}'
+        project = Project.objects.create(name='DummyTestProject')
+        testplan = TestPlan.objects.create(name='DummyTestPlan',
+                                           project=project)
+        launch = Launch.objects.create(test_plan=testplan)
+        self._post(file_name='junit-test-report.xml',
+                   data={'launch': launch.id, 'data': data},
+                   url='{}/junit/junit.xml'.format(testplan.id))
+
+        launches = self._call_rest('get', 'launches/')
+        self.assertEqual(1, launches['count'])
+        launch = launches['results'][0]
+        self.assertTrue(launch['build'])
+        self.assertEqual(launch['build']['hash'], 'c1')
+
+    @override_settings(LAST_COMMITS_SIZE=2)
+    def test_last_commits_limit(self):
+        data = \
+            '{"env": {"BRANCH": "master"}, "options": {"started_by": "user",' \
+            '"last_commits": ["c1","c2","c3"]}}'
+        project = Project.objects.create(name='DummyTestProject')
+        testplan = TestPlan.objects.create(name='DummyTestPlan',
+                                           project=project)
+        launch = Launch.objects.create(test_plan=testplan)
+        self._post(file_name='junit-test-report.xml',
+                   data={'launch': launch.id, 'data': data},
+                   url='{}/junit/junit.xml'.format(testplan.id))
+
+        launches = self._call_rest('get', 'launches/')
+        self.assertEqual(1, launches['count'])
+        launch = launches['results'][0]
+        self.assertTrue(launch['build'])
+        self.assertEqual(launch['build']['last_commits'], ['c1', 'c2'])
