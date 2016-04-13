@@ -155,6 +155,19 @@ class Build(models.Model):
         max_length=64, default=None, null=True, blank=True)
     branch = models.CharField(
         max_length=128, default=None, null=True, blank=True)
+    commit_author = models.CharField(
+        max_length=16, default=None, null=True, blank=True)
+    commit_message = models.CharField(
+        max_length=128, default=None, null=True, blank=True)
+    last_commits = models.TextField(default=None, null=True, blank=True)
+
+    def get_last_commits(self):
+        if self.last_commits == '""' or self.last_commits is None:
+            self.last_commits = '[]'
+        return json.loads(self.last_commits)
+
+    def set_last_commits(self, last_commits):
+        self.last_commits = json.dumps(last_commits)
 
     def __str__(self):
         return '{0} -> LaunchBuild: {1}/{2}/{3}'.format(

@@ -20,6 +20,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import BasicAuthentication
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from rest_framework_bulk import ListBulkCreateAPIView
 
@@ -339,6 +340,10 @@ class LaunchViewSet(viewsets.ModelViewSet):
                 to_date = request.GET['to']
             self.queryset = self.queryset.filter(
                 created__range=(from_date, to_date))
+        if 'build_hash__in' in request.GET \
+                and request.GET['build_hash__in'] != '':
+            self.queryset = self.queryset.filter(
+                build__hash__in=request.GET['build_hash__in'].split(','))
         return self.list(request, *args, **kwargs)
 
     @detail_route(methods=['get'],
@@ -772,8 +777,11 @@ class ReportFileViewSet(APIView):
                             data={'message': 'No file or empty file received'})
         if 'launch' in request.data:
             launch_id = request.data['launch']
-        if 'data' in request.data and request.data['data'] != '':
-            params = request.data['data']
+        if 'data' in request.data:
+            if isinstance(request.data['data'], InMemoryUploadedFile):
+                params = request.data['data'].read().decode('utf8')
+            elif request.data['data'] != '':
+                params = request.data['data']
 
         log.info('Create launch')
         if testplan_id is not None:
