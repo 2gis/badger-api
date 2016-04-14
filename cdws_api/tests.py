@@ -676,12 +676,14 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
         response = self._call_rest(
             'post', 'launches/{0}/update_metrics/'.format(launch['id']),
             {'metrics': ''})
-        self.assertEqual('No metrics in post request', response['message'])
+        self.assertEqual('No metrics in post request: '
+                         '{}'.format({'metrics': ''}), response['message'])
 
         response = self._call_rest(
             'post', 'launches/{0}/update_metrics/'.format(launch['id']),
             {'commits': []})
-        self.assertEqual('No metrics in post request', response['message'])
+        self.assertEqual('No metrics in post request: '
+                         '{}'.format({'commits': []}), response['message'])
 
     def test_update_metrics_invalid(self):
         test_plan = TestPlan.objects.get(name='DummyTestPlan')
@@ -689,12 +691,14 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
         response = self._call_rest(
             'post', 'launches/{0}/update_metrics/'.format(launch['id']),
             {'metrics': 'blabla'})
-        self.assertEqual('Invalid metrics format', response['message'])
+        self.assertEqual('Invalid format for metrics \'blabla\', '
+                         'expect object', response['message'])
 
         response = self._call_rest(
             'post', 'launches/{0}/update_metrics/'.format(launch['id']),
             {'metrics': [1, 2, 3]})
-        self.assertEqual('Invalid metrics format', response['message'])
+        self.assertEqual('Invalid format for metrics \'[1, 2, 3]\', '
+                         'expect object', response['message'])
 
 
 class TestResultApiTestCase(AbstractEntityApiTestCase):

@@ -367,7 +367,9 @@ class LaunchViewSet(viewsets.ModelViewSet):
             if type(request.DATA['metrics']) is not dict:
                 return Response(
                     status=status.HTTP_400_BAD_REQUEST,
-                    data={'message': 'Invalid metrics format'})
+                    data={
+                        'message': 'Invalid format for metrics \'{0}\','
+                        ' expect object'.format(request.DATA['metrics'])})
             try:
                 launch = Launch.objects.get(id=pk)
                 params = launch.get_parameters()
@@ -382,7 +384,8 @@ class LaunchViewSet(viewsets.ModelViewSet):
                           'Launch with id={} does not exist'.format(pk)},
                     status=status.HTTP_404_NOT_FOUND)
         return Response(status=status.HTTP_400_BAD_REQUEST,
-                        data={'message': 'No metrics in post request'})
+                        data={'message': 'No metrics in post request: '
+                                         '{0}'.format(request.DATA)})
 
 
 class TestResultViewSet(ListBulkCreateAPIView,
