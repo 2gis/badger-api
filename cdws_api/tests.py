@@ -651,6 +651,55 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
         ids.sort()
         self.assertEqual(ids, [launch1['id'], launch2['id'], launch4['id']])
 
+    def test_update_metrics(self):
+        metrics = {'m1': 1, 'm2': 2}
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+        launch = self._create_launch(test_plan.id)
+        self.assertFalse(launch['parameters'])
+        response = self._call_rest(
+            'post', 'launches/{0}/update_metrics/'.format(launch['id']),
+            {'metrics': metrics})
+
+        self.assertTrue(response['parameters']['metrics'])
+        self.assertEqual(metrics, response['parameters']['metrics'])
+
+    def test_update_metrics_without_launch(self):
+        metrics = {'m1': 1, 'm2': 2}
+        response = self._call_rest(
+            'post', 'launches/1/update_metrics/', {'metrics': metrics})
+        self.assertEqual('Launch with id=1 does not exist',
+                         response['message'])
+
+    def test_update_metrics_without_metrics(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+        launch = self._create_launch(test_plan.id)
+        response = self._call_rest(
+            'post', 'launches/{0}/update_metrics/'.format(launch['id']),
+            {'metrics': ''})
+        self.assertEqual('No metrics in post request: '
+                         '{}'.format({'metrics': ''}), response['message'])
+
+        response = self._call_rest(
+            'post', 'launches/{0}/update_metrics/'.format(launch['id']),
+            {'commits': []})
+        self.assertEqual('No metrics in post request: '
+                         '{}'.format({'commits': []}), response['message'])
+
+    def test_update_metrics_invalid(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+        launch = self._create_launch(test_plan.id)
+        response = self._call_rest(
+            'post', 'launches/{0}/update_metrics/'.format(launch['id']),
+            {'metrics': 'blabla'})
+        self.assertEqual('Invalid format for metrics \'blabla\', '
+                         'expect object', response['message'])
+
+        response = self._call_rest(
+            'post', 'launches/{0}/update_metrics/'.format(launch['id']),
+            {'metrics': [1, 2, 3]})
+        self.assertEqual('Invalid format for metrics \'[1, 2, 3]\', '
+                         'expect object', response['message'])
+
 
 class TestResultApiTestCase(AbstractEntityApiTestCase):
     def setUp(self):

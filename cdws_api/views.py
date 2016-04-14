@@ -360,6 +360,33 @@ class LaunchViewSet(viewsets.ModelViewSet):
             data={'message': 'Calculation done.'},
             status=status.HTTP_200_OK)
 
+    @detail_route(methods=['post'],
+                  permission_classes=[IsAuthenticatedOrReadOnly])
+    def update_metrics(self, request, pk=None):
+        if 'metrics' in request.DATA and request.DATA['metrics'] != '':
+            if type(request.DATA['metrics']) is not dict:
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={
+                        'message': 'Invalid format for metrics \'{0}\','
+                        ' expect object'.format(request.DATA['metrics'])})
+            try:
+                launch = Launch.objects.get(id=pk)
+                params = launch.get_parameters()
+                params['metrics'] = request.DATA['metrics']
+                launch.set_parameters(params)
+                launch.save()
+                return Response(status=status.HTTP_200_OK,
+                                data=LaunchSerializer(launch).data)
+            except Launch.DoesNotExist:
+                return Response(
+                    data={'message':
+                          'Launch with id={} does not exist'.format(pk)},
+                    status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_400_BAD_REQUEST,
+                        data={'message': 'No metrics in post request: '
+                                         '{0}'.format(request.DATA)})
+
 
 class TestResultViewSet(ListBulkCreateAPIView,
                         viewsets.GenericViewSet,
