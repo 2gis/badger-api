@@ -54,6 +54,9 @@ def create_or_update_user(params, username):
 
 class ADBackend(ModelBackend):
     def authenticate(self, username=None, password=None, **kwargs):
+        if password == '':
+            log.debug('Password is not set for authentication, return')
+            return None
         log.debug('Authenticate username={username}, '
                   'password=***'.format(username=username))
         required_attributes = list(filter(
