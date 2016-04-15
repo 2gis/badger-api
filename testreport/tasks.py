@@ -35,7 +35,7 @@ def finalize_launch(launch_id, state=FINISHED, timeout=30, tries=5):
     launch.state = state
     log.info("Launch for update: {}".format(launch.__dict__))
     launch.save(force_update=True)
-    if state != STOPPED:
+    if state not in [STOPPED, FINISHED]:
         for i in range(0, tries):
             log.info("Waiting for {} seconds, before next try".format(timeout))
             sleep(timeout)
