@@ -72,7 +72,6 @@ from django.conf import settings
 from pycd.celery import app
 
 import datetime
-import time
 import logging
 import celery
 import copy
@@ -820,7 +819,7 @@ class ReportFileViewSet(APIView):
 
             if s3_connection is not None:
                 bucket = get_or_create_bucket(s3_connection)
-                report_key = bucket.new_key(int(time.time()))
+                report_key = bucket.new_key(uuid())
                 report_key.set_contents_from_string(file_obj.read())
 
                 log.debug('Xml file "{}" created in bucket "{}"'.format(
