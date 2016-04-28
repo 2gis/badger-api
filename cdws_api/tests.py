@@ -7,7 +7,8 @@ from testreport.models import TestPlan
 from testreport.models import Launch
 from testreport.models import Build
 from testreport.models import Bug
-from testreport.models import PASSED, FAILED, INIT_SCRIPT, ASYNC_CALL, SKIPPED
+from testreport.models import INIT_SCRIPT, ASYNC_CALL
+from testreport.models import PASSED, FAILED, SKIPPED, BLOCKED
 from testreport.models import STOPPED
 
 from stages.models import Stage
@@ -1310,19 +1311,23 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         failed = self._call_rest(
             'get',
             'testresults/?launch={}&state={}'.format(launch['id'], FAILED))
+        blocked = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], BLOCKED))
         skipped = self._call_rest(
             'get',
             'testresults/?launch={}&state={}'.format(launch['id'], SKIPPED))
         passed = self._call_rest(
             'get',
             'testresults/?launch={}&state={}'.format(launch['id'], PASSED))
-        self.assertEqual(2, failed['count'])
+        self.assertEqual(1, failed['count'])
+        self.assertEqual(1, blocked['count'])
         self.assertEqual(
             'Failure message',
             failed['results'][0]['failure_reason'])
         self.assertEqual(
             'Error messageSystem-out',
-            failed['results'][1]['failure_reason'])
+            blocked['results'][0]['failure_reason'])
         self.assertEqual(1, skipped['count'])
         self.assertEqual(1, passed['count'])
         self.assertEqual(0.4, launch['duration'])
@@ -1411,13 +1416,17 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         failed = self._call_rest(
             'get',
             'testresults/?launch={}&state={}'.format(launch['id'], FAILED))
+        blocked = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], BLOCKED))
         skipped = self._call_rest(
             'get',
             'testresults/?launch={}&state={}'.format(launch['id'], SKIPPED))
         passed = self._call_rest(
             'get',
             'testresults/?launch={}&state={}'.format(launch['id'], PASSED))
-        self.assertEqual(2, failed['count'])
+        self.assertEqual(1, failed['count'])
+        self.assertEqual(1, blocked['count'])
         self.assertEqual(1, skipped['count'])
         self.assertEqual(1, passed['count'])
         self.assertEqual(0.4, launch['duration'])
@@ -1476,7 +1485,11 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         failed = self._call_rest(
             'get',
             'testresults/?launch={}&state={}'.format(launch['id'], FAILED))
-        self.assertEqual(4, failed['count'])
+        blocked = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], BLOCKED))
+        self.assertEqual(2, failed['count'])
+        self.assertEqual(2, blocked['count'])
 
     def test_empty_started_by(self):
         data = '{"env": {"BRANCH": "master"}}'

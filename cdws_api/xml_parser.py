@@ -86,16 +86,20 @@ class JunitParser(XmlParser):
         result.state = BLOCKED
         result.failure_reason = ''
 
-        error = self.get_node(element, ['error', 'failure'])
+        failure = self.get_node(element, ['failure'])
+        error = self.get_node(element, ['error'])
         skipped = self.get_node(element, ['skipped'])
         if skipped is not None:
             result.state = SKIPPED
             result.failure_reason = self.get_text(skipped.childNodes)
+        elif failure is not None:
+            result.state = FAILED
+            result.failure_reason = self.get_text(failure.childNodes)
+        elif error is not None:
+            result.failure_reason = self.get_text(error.childNodes)
         else:
             result.state = PASSED
-        if error is not None:
-            result.state = FAILED
-            result.failure_reason = self.get_text(error.childNodes)
+
         if not element.getAttribute('format'):
             system_out = self.get_node(element, 'system-out')
             if system_out is not None:
