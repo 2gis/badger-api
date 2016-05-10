@@ -1276,11 +1276,12 @@ class MetricsApiTestCase(AbstractEntityApiTestCase):
 
 @override_settings(S3_ACCESS_KEY=None, S3_SECRET_KEY=None, S3_HOST=None)
 class ReportFileApiTestCase(AbstractEntityApiTestCase):
-    def _post(self, file_name, url, data=None):
-        auth = '{}:{}'.format(self.user_login, self.user_plain_password)
-        credentials = base64.b64encode(auth.encode('ascii'))
-        self.client.defaults['HTTP_AUTHORIZATION'] =\
-            'Basic ' + credentials.decode('utf-8')
+    def _post(self, file_name, url, data=None, auth=True):
+        if auth:
+            auth = '{}:{}'.format(self.user_login, self.user_plain_password)
+            credentials = base64.b64encode(auth.encode('ascii'))
+            self.client.defaults['HTTP_AUTHORIZATION'] =\
+                'Basic ' + credentials.decode('utf-8')
 
         path = os.path.join(os.path.dirname(__file__),
                             'testdata/{}'.format(file_name))
@@ -1293,9 +1294,11 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
             response = self.client.post('/{0}/external/report-xunit/{1}'.
                                         format(settings.CDWS_API_PATH, url),
                                         post_data)
+
         if response.content != b'':
-            return json.loads(response.content.decode('utf-8',
-                                                      errors='replace'))
+            return (
+                json.loads(response.content.decode('utf-8', errors='replace')),
+                response.status_code)
 
     def test_upload_junit_file(self):
         project = Project.objects.create(name='DummyTestProject')
@@ -1374,8 +1377,9 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         project = Project.objects.create(name='DummyTestProject')
         testplan = TestPlan.objects.create(name='DummyTestPlan',
                                            project=project)
-        response = self._post(file_name='empty-test-report.xml',
-                              url='{}/nunit/nunit.xml'.format(testplan.id))
+        response, code = self._post(
+            file_name='empty-test-report.xml',
+            url='{}/nunit/nunit.xml'.format(testplan.id))
         launches = self._call_rest('get',
                                    'launches/?testplan={}'.format(testplan.id))
         self.assertEqual(1, launches['count'])
@@ -1395,10 +1399,12 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         project = Project.objects.create(name='DummyTestProject')
         testplan = TestPlan.objects.create(name='DummyTestPlan',
                                            project=project)
-        response = self._post(file_name='nunit-test-report.xml',
-                              url='{}/asdf/nunit.xml'.format(testplan.id))
+        response, code = self._post(
+            file_name='nunit-test-report.xml',
+            url='{}/asdf/nunit.xml'.format(testplan.id))
 
         self.assertEqual('Unknown file format', response['message'])
+        self.assertEqual(400, code)
 
     def test_upload_file_to_launch(self):
         project = Project.objects.create(name='DummyTestProject')
@@ -1561,3 +1567,12 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         launch = launches['results'][0]
         self.assertTrue(launch['build'])
         self.assertEqual(launch['build']['last_commits'], ['c1', 'c2'])
+
+    def test_upload_file_unauthorized(self):
+        project = Project.objects.create(name='DummyTestProject')
+        testplan = TestPlan.objects.create(name='DummyTestPlan',
+                                           project=project)
+        response, code = self._post(
+            file_name='junit-test-report.xml',
+            url='{}/junit/junit.xml'.format(testplan.id), auth=False)
+        self.assertEqual(401, code)

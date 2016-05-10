@@ -797,9 +797,9 @@ class ReportFileViewSet(APIView):
         params = None
         if xunit_format not in ['junit', 'nunit']:
             return Response(data={'message': 'Unknown file format'},
-                            status=400)
+                            status=status.HTTP_400_BAD_REQUEST)
         if 'file' not in request.data:
-            return Response(status=400,
+            return Response(status=status.HTTP_400_BAD_REQUEST,
                             data={'message': 'No file or empty file received'})
         if 'launch' in request.data:
             launch_id = request.data['launch']
