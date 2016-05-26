@@ -35,7 +35,7 @@ def finalize_launch(launch_id, state=FINISHED, timeout=30, tries=5):
     launch.state = state
     log.info("Launch for update: {}".format(launch.__dict__))
     launch.save(force_update=True)
-    if state not in [STOPPED, FINISHED]:
+    if state != STOPPED:
         for i in range(0, tries):
             log.info("Waiting for {} seconds, before next try".format(timeout))
             sleep(timeout)
@@ -195,7 +195,7 @@ def parse_xml(self, xunit_format, launch_id, params, s3_conn=False,
         add_comment_to_launch(launch_id, comment)
 
     if s3_conn:
-        finalize_launch(launch_id=launch_id)
+        finalize_launch(launch_id=launch_id, tries=0)
         delete_file_from_storage(s3_connection, s3_key_name)
         log.debug('Xml file "{}" deleted'.format(s3_key_name))
     else:
