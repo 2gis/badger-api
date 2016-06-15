@@ -1,3 +1,4 @@
+amqp==2.0.2
 celery==3.1.18
 simplejson==3.6.5
 ldap3==0.9.8.4
