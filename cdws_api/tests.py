@@ -604,7 +604,7 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
             'get',
             'launches/custom_list/?days=0')
         print(response['results'])
-        print(datetime.now().time())
+        print(datetime.now())
         self.assertEqual(len(response['results']), 0)
 
         response = self._call_rest(

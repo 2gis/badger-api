@@ -327,6 +327,11 @@ class LaunchViewSet(viewsets.ModelViewSet):
         if 'days' in request.GET:
             delta = datetime.datetime.today() - datetime.timedelta(
                 days=int(request.GET['days']))
+            log.error('days {}'.format(int(request.GET['days'])))
+            log.error('today {}'.format(datetime.datetime.today()))
+            log.error('delta {}'.format(datetime.timedelta(
+                days=int(request.GET['days']))))
+            log.error('delta2 {}'.format(delta))
             self.queryset = self.queryset.filter(created__gt=delta)
         if 'testplan_id__in' in request.GET \
                 and request.GET['testplan_id__in'] != '':
