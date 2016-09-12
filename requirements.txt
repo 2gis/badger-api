@@ -1,7 +1,7 @@
 amqp==2.0.2
 celery==3.1.18
 simplejson==3.6.5
-ldap3==0.9.8.4
+ldap3
 django==1.7.8  # 1.8.2
 djangorestframework==3.1.2
 djangorestframework-bulk==0.2.1
