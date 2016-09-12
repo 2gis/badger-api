@@ -598,15 +598,19 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
     def test_days_filter(self):
         test_plan = TestPlan.objects.get(name='DummyTestPlan')
         self._create_launch(test_plan.id)
+        print(Launch.objects.get(test_plan=test_plan).created)
 
         response = self._call_rest(
             'get',
             'launches/custom_list/?days=0')
+        print(response['results'])
+        print(datetime.now().time())
         self.assertEqual(len(response['results']), 0)
 
         response = self._call_rest(
             'get',
             'launches/custom_list/?days=1')
+        print(response['results'])
         self.assertEqual(len(response['results']), 1)
 
     def test_from_to_filter(self):
