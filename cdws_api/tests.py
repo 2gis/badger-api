@@ -873,9 +873,9 @@ class BugsApiTestCase(AbstractEntityApiTestCase):
         return 'https://{}/rest/api/latest/issue/{}'.\
                format(settings.BUG_TRACKING_SYSTEM_HOST, externalId)
 
-    def _create_bug(self):
+    def _create_bug(self, issue_name='ISSUE-1'):
         data = {
-            'externalId': 'ISSUE-1',
+            'externalId': issue_name,
             'regexp': 'Regexp'
         }
         return self._call_rest('post', 'bugs/', data)
@@ -964,6 +964,38 @@ class BugsApiTestCase(AbstractEntityApiTestCase):
         update_bugs()
         response = self._get_bugs()
         self.assertEqual(0, len(response['results']))
+
+    @requests_mock.Mocker()
+    def test_bug_custom_list(self, m):
+        m.get(self.issue_request('ISSUE-1'), text=self.issue_found)
+        m.get(self.issue_request('ISSUE-2'), text=self.issue_found)
+        m.get(self.issue_request('JIRA-1'), text=self.issue_found)
+        m.get(self.issue_request('TEST-1'), text=self.issue_found)
+        self._create_bug('ISSUE-1')
+        self._create_bug('ISSUE-2')
+        self._create_bug('JIRA-1')
+        self._create_bug('TEST-1')
+
+        # without filter
+        response = self._get_bugs()
+        self.assertEqual(4, len(response['results']))
+
+        # empty filter
+        response = self._call_rest(
+            'get', 'bugs/custom_list/?issue_names__in=')
+        self.assertEqual(4, len(response['results']))
+
+        # two values in filter
+        response = self._call_rest(
+            'get', 'bugs/custom_list/?issue_names__in=ISSUE,JIRA')
+        self.assertEqual(3, len(response['results']))
+
+        # one value in filter
+        response = self._call_rest(
+            'get', 'bugs/custom_list/?issue_names__in=TEST')
+        self.assertEqual(1, len(response['results']))
+        issue = response['results'][0]
+        self.assertEqual('TEST-1', issue['externalId'])
 
 
 class StagesApiTestCase(AbstractEntityApiTestCase):

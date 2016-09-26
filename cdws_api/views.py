@@ -61,6 +61,7 @@ from testreport.tasks import parse_xml
 
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
+from django.db.models import Q
 
 from comments.models import Comment
 
@@ -489,6 +490,18 @@ class BugViewSet(viewsets.ModelViewSet):
                            state=response['status']['name'],
                            name=response['summary'])
         return Response(status=status.HTTP_201_CREATED)
+
+    @list_route(methods=['get'])
+    def custom_list(self, request, *args, **kwargs):
+        if 'issue_names__in' in request.GET \
+                and request.GET['issue_names__in'] != '':
+            issue_names = request.GET['issue_names__in'].split(',')
+            query = Q()
+            for issue_name in issue_names:
+                query = query | Q(externalId__startswith=issue_name)
+            self.queryset = Bug.objects.filter(query)
+
+        return self.list(request, *args, **kwargs)
 
 
 class StageViewSet(GetOrCreateViewSet):
