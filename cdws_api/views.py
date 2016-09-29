@@ -125,7 +125,7 @@ class ProjectViewSet(GetOrCreateViewSet):
         return Project.objects.get(name=serializer.initial_data['name'])
 
     @detail_route(methods=['post'],
-                  permission_classes=[IsAuthenticatedOrReadOnly],
+                  permission_classes=[DjangoModelPermissionsOrAnonReadOnly],
                   url_path='settings')
     def set_settings(self, request, pk=None):
         (settings, new) = Settings.objects.get_or_create(
@@ -135,7 +135,7 @@ class ProjectViewSet(GetOrCreateViewSet):
         return Response(status=status.HTTP_201_CREATED, data={'message': 'ok'})
 
     @detail_route(methods=['post'],
-                  permission_classes=[IsAuthenticatedOrReadOnly],
+                  permission_classes=[DjangoModelPermissionsOrAnonReadOnly],
                   url_path='settings/delete')
     def delete_settings(self, request, pk=None):
         settings = Settings.objects.filter(
