@@ -83,9 +83,22 @@ class AbstractEntityApiTestCase(TestCase):
 class ProjectApiTestCase(AbstractEntityApiTestCase):
     def setUp(self):
         super(ProjectApiTestCase, self).setUp()
+        self._set_user_permissions()
 
     def _get_projects(self):
         return self._call_rest('get', 'projects/')
+
+    def _set_user_permissions(self):
+        content_type = ContentType.objects.get_for_model(Project)
+        permissions = Permission.objects.filter(content_type=content_type)
+        user = User.objects.get(username=self.user_login)
+        for permission in permissions:
+            user.user_permissions.add(permission)
+
+    def _remove_user_permission(self, codename):
+        user = User.objects.get(username=self.user_login)
+        user.user_permissions.remove(
+            Permission.objects.get(codename=codename))
 
     def test_creation(self):
         project = self._create_project('DummyProject')
@@ -142,6 +155,15 @@ class ProjectApiTestCase(AbstractEntityApiTestCase):
         projects = self._get_projects()
         settings = projects['results'][0]['settings']
         self.assertEqual(len(settings), 1)
+
+    def test_update_settings_without_permissions(self):
+        self._remove_user_permission('add_project')
+        project = Project.objects.create(name='DummyTestProject')
+        data = {'key': 'key', 'value': 'value'}
+        response = self._call_rest(
+            'post', 'projects/{}/settings/'.format(project.id), data)
+        self.assertEqual('You do not have permission to perform this action.',
+                         response['detail'])
 
 
 class TestPlanApiTestCase(AbstractEntityApiTestCase):
