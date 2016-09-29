@@ -119,6 +119,30 @@ class ProjectApiTestCase(AbstractEntityApiTestCase):
         self.assertEqual(setting[0].key, 'key')
         self.assertEqual(setting[0].value, 'new_value')
 
+    def test_delete_setting_by_existent_key(self):
+        project = Project.objects.create(name='DummyTestProject')
+        Settings.objects.create(key='key', value='value', project=project)
+        data = {'key': 'key', 'value': 'value'}
+        response = self._call_rest(
+            'post', 'projects/{}/settings/delete/'.format(project.id), data)
+        self.assertEqual(response['message'], 'ok')
+
+        projects = self._get_projects()
+        settings = projects['results'][0]['settings']
+        self.assertEqual(len(settings), 0)
+
+    def test_delete_setting_by_nonexistent_key(self):
+        project = Project.objects.create(name='DummyTestProject')
+        Settings.objects.create(key='key', value='value', project=project)
+        data = {'key': 'key1', 'value': 'value'}
+        response = self._call_rest(
+            'post', 'projects/{}/settings/delete/'.format(project.id), data)
+        self.assertEqual(response['message'], 'ok')
+
+        projects = self._get_projects()
+        settings = projects['results'][0]['settings']
+        self.assertEqual(len(settings), 1)
+
 
 class TestPlanApiTestCase(AbstractEntityApiTestCase):
     def setUp(self):

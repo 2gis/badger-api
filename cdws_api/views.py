@@ -134,6 +134,16 @@ class ProjectViewSet(GetOrCreateViewSet):
         settings.save()
         return Response(status=status.HTTP_201_CREATED, data={'message': 'ok'})
 
+    @detail_route(methods=['post'],
+                  permission_classes=[IsAuthenticatedOrReadOnly],
+                  url_path='settings/delete')
+    def delete_settings(self, request, pk=None):
+        settings = Settings.objects.filter(
+            project=Project.objects.get(id=pk),
+            key=request.DATA['key'], value=request.DATA['value'])
+        settings.delete()
+        return Response(status=status.HTTP_200_OK, data={'message': 'ok'})
+
 
 class TestPlanViewSet(GetOrCreateViewSet):
     queryset = TestPlan.objects.all()
