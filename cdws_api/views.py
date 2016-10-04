@@ -220,8 +220,12 @@ class TestPlanViewSet(GetOrCreateViewSet):
 
         # queryset create
         if 'launch_items' in post_data:
-            launch_items = test_plan.launchitem_set.filter(
-                id__in=post_data['launch_items']).order_by('id')
+            try:
+                launch_items = test_plan.launchitem_set.filter(
+                    id__in=post_data['launch_items']).order_by('id')
+            except (KeyError, ValueError) as e:
+                return Response(status=status.HTTP_400_BAD_REQUEST,
+                                data={'message': '{}'.format(e)})
         else:
             launch_items = test_plan.launchitem_set.all().order_by('id')
 

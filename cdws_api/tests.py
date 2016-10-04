@@ -294,6 +294,41 @@ class TestPlanApiTestCase(AbstractEntityApiTestCase):
         self.assertFalse(launch['build']['hash'])
         self.assertFalse(launch['build']['branch'])
 
+    def test_execute_with_incorrect_items(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+
+        self._create_launch_item({
+            'test_plan': test_plan.id,
+            'command': 'touch init_file',
+            'type': INIT_SCRIPT,
+            'timeout': 10,
+        })
+
+        output = self._tp_execute(
+            test_plan.id,
+            {'options': {'started_by': 'http://2gis.local/'},
+             'launch_items': '1,2,3'})
+        self.assertIsNotNone(output.get('message'))
+
+    def test_execute_with_items(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+
+        self._create_launch_item({
+            'test_plan': test_plan.id,
+            'command': 'touch init_file',
+            'type': INIT_SCRIPT,
+            'timeout': 10,
+        })
+
+        output = self._tp_execute(
+            test_plan.id,
+            {'options': {'started_by': 'http://2gis.local/'},
+             'launch_items': [1, 2, 3]})
+
+        launch_id = output['launch_id']
+        launch = self._get_launch(launch_id)
+        self.assertEqual(len(launch['tasks']), 1)
+
     def test_execute_failure(self):
         test_plan = TestPlan.objects.get(name='DummyTestPlan')
 
