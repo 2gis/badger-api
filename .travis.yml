@@ -5,4 +5,10 @@ install:
 script:
   - tox
 after_success:
-  - coveralls  
+  - coveralls
+  - export IMAGE_NAME=2gis/badger-api:$TRAVIS_BUILD_ID
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    docker build -t $IMAGE_NAME .;
+    docker login -e="$DOCKER_HUB_EMAIL" -u="$DOCKER_HUB_USERNAME" -p="$DOCKER_HUB_PASSWORD";
+    docker push $IMAGE_NAME;
+    fi
