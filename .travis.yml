@@ -1,8 +1,7 @@
 language: python
-env:
-  - BOTO_CONFIG=/doesnotexist
+python:
+  - "3.4"
 install:
-  - pip3 install --upgrade pip
   - pip install coveralls
   - pip install tox
 script:
