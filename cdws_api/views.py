@@ -61,7 +61,7 @@ from testreport.tasks import parse_xml
 
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from comments.models import Comment
 
@@ -358,6 +358,16 @@ class LaunchViewSet(viewsets.ModelViewSet):
                 and request.GET['build_hash__in'] != '':
             self.queryset = self.queryset.filter(
                 build__hash__in=request.GET['build_hash__in'].split(','))
+        if 'results_group_count' in request.GET \
+                and request.GET['results_group_count'] != '':
+            launch = Launch.objects.get(id=request.GET['results_group_count'])
+
+            results = TestResult.objects.\
+                filter(launch=launch, state=request.GET['state']).\
+                values('launch_item_id').\
+                annotate(count=Count('launch_item_id'))
+            return Response(data={'results': results},
+                            status=status.HTTP_200_OK)
         return self.list(request, *args, **kwargs)
 
     @detail_route(methods=['get'],
@@ -410,7 +420,8 @@ class TestResultViewSet(ListBulkCreateAPIView,
     model = TestResult
     filter_backends = (DjangoFilterBackend, OrderingFilter, SearchFilter)
     search_fields = ('suite', 'name', 'failure_reason')
-    filter_fields = ('id', 'state', 'name', 'launch', 'duration')
+    filter_fields = ('id', 'state', 'name', 'launch',
+                     'duration', 'launch_item_id')
 
     @list_route(methods=['get'])
     def custom_list(self, request, *args, **kwargs):

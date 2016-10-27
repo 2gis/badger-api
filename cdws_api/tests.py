@@ -782,6 +782,58 @@ class LaunchApiTestCase(AbstractEntityApiTestCase):
         self.assertEqual('Invalid format for metrics \'[1, 2, 3]\', '
                          'expect object', response['message'])
 
+    def _get_testresult_data(self, launch_id, launch_item_id):
+        return [{
+            'launch': launch_id,
+            'name': 'DummyTestCase',
+            'suite': 'DummyTestSuite',
+            'state': FAILED,
+            'failure_reason': None,
+            'duration': 1,
+            'launch_item_id': launch_item_id
+        }]
+
+    def _create_testresult(self, data):
+        return self._call_rest('post', 'testresults/', data)
+
+    def test_result_count_filter(self):
+        test_plan = TestPlan.objects.get(name='DummyTestPlan')
+        launch = self._create_launch(test_plan.id)
+        item1 = self._create_launch_item({
+            'test_plan': test_plan.id,
+            'command': 'sleep 600',
+            'type': INIT_SCRIPT,
+            'timeout': 1200,
+        })
+        item2 = self._create_launch_item({
+            'test_plan': test_plan.id,
+            'command': 'sleep 600',
+            'type': ASYNC_CALL,
+            'timeout': 1200,
+        })
+
+        data = self._get_testresult_data(launch['id'], item1['id'])
+        self._create_testresult(data)
+        data = self._get_testresult_data(launch['id'], item2['id'])
+        self._create_testresult(data)
+        data = self._get_testresult_data(launch['id'], item2['id'])
+        self._create_testresult(data)
+
+        response = self._call_rest(
+            'get',
+            'launches/custom_list/?results_group_count={}&state={}'.format(
+                launch['id'], FAILED))
+
+        self.assertEqual(response['results'],
+                         [{'launch_item_id': item1['id'], 'count': 1},
+                          {'launch_item_id': item2['id'], 'count': 2}])
+
+        response = self._call_rest(
+            'get',
+            'launches/custom_list/?results_group_count={}&state={}'.format(
+                launch['id'], PASSED))
+        self.assertEqual(response['results'], [])
+
 
 class TestResultApiTestCase(AbstractEntityApiTestCase):
     def setUp(self):
