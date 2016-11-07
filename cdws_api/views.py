@@ -129,8 +129,8 @@ class ProjectViewSet(GetOrCreateViewSet):
                   url_path='settings')
     def set_settings(self, request, pk=None):
         (settings, new) = Settings.objects.get_or_create(
-            project=Project.objects.get(id=pk), key=request.DATA['key'])
-        settings.value = request.DATA['value']
+            project=Project.objects.get(id=pk), key=request.data['key'])
+        settings.value = request.data['value']
         settings.save()
         return Response(status=status.HTTP_201_CREATED, data={'message': 'ok'})
 
@@ -140,7 +140,7 @@ class ProjectViewSet(GetOrCreateViewSet):
     def delete_settings(self, request, pk=None):
         settings = Settings.objects.filter(
             project=Project.objects.get(id=pk),
-            key=request.DATA['key'], value=request.DATA['value'])
+            key=request.data['key'], value=request.data['value'])
         settings.delete()
         return Response(status=status.HTTP_200_OK, data={'message': 'ok'})
 
@@ -165,7 +165,7 @@ class TestPlanViewSet(GetOrCreateViewSet):
         return self.list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
-        request.DATA['owner'] = request.user.id
+        request.data['owner'] = request.user.id
         return super(TestPlanViewSet, self).create(request, *args, **kwargs)
 
     def find_duplicate(self, serializer):
@@ -182,8 +182,8 @@ class TestPlanViewSet(GetOrCreateViewSet):
         workspace_path = os.path.join(
             settings.CDWS_WORKING_DIR,
             timezone.now().strftime('%Y-%m-%d-%H-%M-%f'))
-        post_data = request.DATA
-        options = request.DATA['options']
+        post_data = request.data
+        options = request.data['options']
         json_file = None
         if 'json_file' in post_data:
             json_file = post_data['json_file']
@@ -387,17 +387,17 @@ class LaunchViewSet(viewsets.ModelViewSet):
     @detail_route(methods=['post'],
                   permission_classes=[IsAuthenticatedOrReadOnly])
     def update_metrics(self, request, pk=None):
-        if 'metrics' in request.DATA and request.DATA['metrics'] != '':
-            if type(request.DATA['metrics']) is not dict:
+        if 'metrics' in request.data and request.data['metrics'] != '':
+            if type(request.data['metrics']) is not dict:
                 return Response(
                     status=status.HTTP_400_BAD_REQUEST,
                     data={
                         'message': 'Invalid format for metrics \'{0}\','
-                        ' expect object'.format(request.DATA['metrics'])})
+                        ' expect object'.format(request.data['metrics'])})
             try:
                 launch = Launch.objects.get(id=pk)
                 params = launch.get_parameters()
-                params['metrics'] = request.DATA['metrics']
+                params['metrics'] = request.data['metrics']
                 launch.set_parameters(params)
                 launch.save()
                 return Response(status=status.HTTP_200_OK,
@@ -409,7 +409,7 @@ class LaunchViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_404_NOT_FOUND)
         return Response(status=status.HTTP_400_BAD_REQUEST,
                         data={'message': 'No metrics in post request: '
-                                         '{0}'.format(request.DATA)})
+                                         '{0}'.format(request.data)})
 
 
 class TestResultViewSet(ListBulkCreateAPIView,
@@ -419,7 +419,7 @@ class TestResultViewSet(ListBulkCreateAPIView,
     serializer_class = TestResultSerializer
     model = TestResult
     filter_backends = (DjangoFilterBackend, OrderingFilter, SearchFilter)
-    search_fields = ('suite', 'name', 'failure_reason')
+    search_fields = ('$suite', '$name', '$failure_reason')
     filter_fields = ('id', 'state', 'name', 'launch',
                      'duration', 'launch_item_id')
 
@@ -453,6 +453,10 @@ class TestResultViewSet(ListBulkCreateAPIView,
         return self.list(request, *args, **kwargs)
 
 
+class TestResultNegativeViewSet(TestResultViewSet):
+    search_fields = ('$name', )
+
+
 class LaunchItemViewSet(viewsets.ModelViewSet):
     queryset = LaunchItem.objects.all()
     serializer_class = LaunchItemSerializer
@@ -482,9 +486,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     filter_fields = ('id', 'user', 'content_type', 'object_pk')
 
     def create(self, request, *args, **kwargs):
-        ct = ContentType.objects.get(name__exact=request.DATA['content_type'])
-        request.DATA['content_type'] = ct.id
-        request.DATA['user'] = request.user.id
+        ct = ContentType.objects.get(name__exact=request.data['content_type'])
+        request.data['content_type'] = ct.id
+        request.data['user'] = request.user.id
         return super(CommentViewSet, self).create(request, *args, **kwargs)
 
 
@@ -497,8 +501,8 @@ class BugViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         log.info('Check issue {} for existing'.
-                 format(request.DATA['externalId']))
-        response = get_issue_fields_from_bts(request.DATA['externalId'])
+                 format(request.data['externalId']))
+        response = get_issue_fields_from_bts(request.data['externalId'])
 
         errors = []
         if 'errors' in response:
@@ -510,8 +514,8 @@ class BugViewSet(viewsets.ModelViewSet):
                 data={'message': '\n'.join(errors)},
                 status=status.HTTP_400_BAD_REQUEST)
 
-        Bug.objects.create(externalId=request.DATA['externalId'],
-                           regexp=request.DATA['regexp'],
+        Bug.objects.create(externalId=request.data['externalId'],
+                           regexp=request.data['regexp'],
                            state=response['status']['name'],
                            name=response['summary'])
         return Response(status=status.HTTP_201_CREATED)
@@ -551,9 +555,9 @@ class JenkinsViewSet(APIView):
     authentication_classes = (UnsafeSessionAuthentication,)
 
     def post(self, request, format=None, project=None):
-        name = request.DATA['name']
-        build_phase = request.DATA['build']['phase']
-        build_full_url = request.DATA['build']['full_url']
+        name = request.data['name']
+        build_phase = request.data['build']['phase']
+        build_full_url = request.data['build']['full_url']
 
         try:
             project = Project.objects.get(name=project)
@@ -573,7 +577,7 @@ class JenkinsViewSet(APIView):
             name=name, project=project)
 
         stage.link = build_full_url
-        stage.state = self._get_build_state(request.DATA)
+        stage.state = self._get_build_state(request.data)
         if build_number != '':
             stage.text = '{0} (build {1})'.format(build_phase, build_number)
         else:
@@ -618,7 +622,7 @@ class RundeckViewSet(APIView):
     parser_classes = (CustomXmlParser, )
 
     def post(self, request, format=None, project=None):
-        root = request.DATA
+        root = request.data
         job_status = 'unknown'
         group_name = 'unknown'
         href = settings.RUNDECK_URL

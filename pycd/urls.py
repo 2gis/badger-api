@@ -9,6 +9,7 @@ from cdws_api.views import ProjectViewSet
 from cdws_api.views import TestPlanViewSet
 from cdws_api.views import LaunchViewSet
 from cdws_api.views import TestResultViewSet
+from cdws_api.views import TestResultNegativeViewSet
 from cdws_api.views import LaunchItemViewSet
 from cdws_api.views import TaskResultViewSet
 from cdws_api.views import CommentViewSet
@@ -31,6 +32,7 @@ router.register(r'projects', ProjectViewSet)
 router.register(r'testplans', TestPlanViewSet)
 router.register(r'launches', LaunchViewSet)
 router.register(r'testresults', TestResultViewSet)
+router.register(r'testresults_negative', TestResultNegativeViewSet)
 router.register(r'launch-items', LaunchItemViewSet)
 router.register(r'tasks', TaskResultViewSet)
 router.register(r'comments', CommentViewSet)
