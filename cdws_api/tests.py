@@ -963,6 +963,32 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
         response = self._get_testresults('history=1&days=0')
         self.assertEqual(0, response['count'])
 
+    def test_search_positive(self):
+        data = self._get_testresult_data(self.launch.id)
+        self._create_testresult(data)
+        self.assertEqual(len(self._get_testresults()['results']), 2)
+
+        response = self._call_rest('get',
+                                   'testresults/?search={}'.format('Second'))
+        self.assertEqual(1, response['count'])
+        self.assertEqual('SecondDummyTestSuite',
+                         response['results'][0]['name'])
+
+        response = self._call_rest('get',
+                                   'testresults/?search={}'.format('Dummy'))
+        self.assertEqual(2, response['count'])
+
+    def test_search_negative(self):
+        data = self._get_testresult_data(self.launch.id)
+        self._create_testresult(data)
+        self.assertEqual(len(self._get_testresults()['results']), 2)
+
+        response = self._call_rest('get', 'testresults_negative/?search={}'.
+                                   format('^((?!Second).)*$'))
+        self.assertEqual(1, response['count'])
+        self.assertEqual('DummyTestCase',
+                         response['results'][0]['name'])
+
 
 class CommentsApiTestCase(AbstractEntityApiTestCase):
     comment = 'Dummy comment text'
