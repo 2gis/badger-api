@@ -454,7 +454,7 @@ class TestResultViewSet(ListBulkCreateAPIView,
 
 
 class TestResultNegativeViewSet(TestResultViewSet):
-    search_fields = ('$name', )
+    search_fields = ('$failure_reason', )
 
 
 class LaunchItemViewSet(viewsets.ModelViewSet):
