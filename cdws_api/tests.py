@@ -849,7 +849,7 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
             'name': 'DummyTestCase',
             'suite': 'DummyTestSuite',
             'state': PASSED,
-            'failure_reason': None,
+            'failure_reason': 'ololo',
             'duration': 1
         }, {
             'launch': launch_id,
@@ -984,7 +984,7 @@ class TestResultApiTestCase(AbstractEntityApiTestCase):
         self.assertEqual(len(self._get_testresults()['results']), 2)
 
         response = self._call_rest('get', 'testresults_negative/?search={}'.
-                                   format('^((?!Second).)*$'))
+                                   format('^((?!Exception).)*$'))
         self.assertEqual(1, response['count'])
         self.assertEqual('DummyTestCase',
                          response['results'][0]['name'])
