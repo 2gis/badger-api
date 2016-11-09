@@ -81,5 +81,8 @@ class ADBackend(ModelBackend):
         for key, value in iter(
                 settings.AUTH_LDAP3_ATTRIBUTES_MAPPING.items()):
             if value is not None:
-                params[key] = attributes[value][0]
+                if isinstance(attributes[value], list):
+                    params[key] = attributes[value][0]
+                else:
+                    params[key] = attributes[value]
         return create_or_update_user(params, username)
