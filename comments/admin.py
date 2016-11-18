@@ -46,4 +46,5 @@ class CommentsAdmin(admin.ModelAdmin):
         self.message_user(request, msg.format({
             'count': n_comments, 'action': done_message(n_comments)}))
 
+
 admin.site.register(Comment, CommentsAdmin)
