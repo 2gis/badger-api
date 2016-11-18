@@ -1,5 +1,10 @@
 from __future__ import absolute_import
 from celery.exceptions import SoftTimeLimitExceeded
+from celery.exceptions import Ignore
+from celery import states
+
+from testreport.models import INIT_SCRIPT
+from testreport.tasks import finalize_launch
 
 import celery
 import subprocess
@@ -23,8 +28,8 @@ def kill_proc_tree(pid, including_parent=True):
         parent.wait(5)
 
 
-@celery.task(time_limit=43200)
-def launch_process(cmd, env={}):
+@celery.task(time_limit=43200, bind=True)
+def launch_process(self, cmd, task_type=None, env={}):
     pid = None
 
     def sigterm_handler(signum, frame):
@@ -55,6 +60,14 @@ def launch_process(cmd, env={}):
         pid = cmd.pid
         result['stdout'], result['stderr'] = cmd.communicate()
         result['return_code'] = cmd.returncode
+        # If INIT_SCRIPT task returns non-zero code we finalize launch
+        # and raise Ignore exception to force the worker to ignore
+        # current task and all tasks in its callback
+        # http://docs.celeryproject.org/en/3.1/userguide/tasks.html#ignore
+        if result['return_code'] != 0 and task_type == INIT_SCRIPT:
+            self.update_state(state=states.FAILURE, meta=result)
+            finalize_launch(launch_id=env['LAUNCH_ID'])
+            raise Ignore()
     except subprocess.CalledProcessError as e:
         result['stdout'] = e.output
         result['return_code'] = e.returncode
@@ -68,4 +81,5 @@ def launch_process(cmd, env={}):
     result['start'] = start.isoformat()
     result['end'] = end.isoformat()
     result['delta'] = (end - start).total_seconds()
+
     return result

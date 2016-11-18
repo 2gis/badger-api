@@ -26,6 +26,7 @@ def force_delete(modeladmin, request, queryset):
     except Exception as e:
         log.error(e)
 
+
 force_delete.short_description = 'Delete selected items w/o confirmation'
 
 

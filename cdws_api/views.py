@@ -246,7 +246,8 @@ class TestPlanViewSet(GetOrCreateViewSet):
             item_env = copy.copy(env)
             item_env['LAUNCH_ITEM_ID'] = str(launch_item.id)
             subtask = launch_process.subtask(
-                [launch_item.command], {'env': item_env}, immutable=True,
+                [launch_item.command, launch_item.type], {'env': item_env},
+                immutable=True,
                 soft_time_limit=launch_item.timeout,
                 options={'task_id': item_uuid})
 

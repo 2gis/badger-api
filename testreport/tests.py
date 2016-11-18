@@ -120,6 +120,7 @@ class TestLaunchProcessFunction(TestCase):
             'var1': 'VALUE',
             'Test2': '0'
         }
-        output = launch_process('echo "${HOME};${var1};${Test2}"', test_dict)
+        output = launch_process('echo "${HOME};${var1};${Test2}"',
+                                env=test_dict)
         self.assertDictEqual(output['env'], test_dict)
         self.assertEqual(output['stdout'], b'/tmp/;VALUE;0\n')
