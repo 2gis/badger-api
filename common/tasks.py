@@ -60,6 +60,8 @@ def launch_process(self, cmd, task_type=None, env={}):
         pid = cmd.pid
         result['stdout'], result['stderr'] = cmd.communicate()
         result['return_code'] = cmd.returncode
+        # If INIT_SCRIPT task returns non-zero code we finalize launch
+        # and ignore all following tasks
         if result['return_code'] != 0 and task_type == INIT_SCRIPT:
             self.update_state(state=states.FAILURE, meta=result)
             finalize_launch(launch_id=env['LAUNCH_ID'])
