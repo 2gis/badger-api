@@ -210,7 +210,7 @@ class TestPlanViewSet(GetOrCreateViewSet):
         if 'env' in post_data:
             for key, value in iter(post_data['env'].items()):
                 env[key] = value
-        env['REPORT_API_URL'] = 'http://{0}/{1}'.format(
+        env['REPORT_API_URL'] = 'https://{0}/{1}'.format(
             settings.CDWS_API_HOSTNAME, settings.CDWS_API_PATH)
         # environment values should be string for exec
         env['TESTPLAN_ID'] = str(test_plan.id)
