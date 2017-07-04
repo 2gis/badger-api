@@ -48,8 +48,8 @@ class XmlParser:
     def get_text(self, nodelist):
         rc = []
         for node in nodelist:
-            if node.nodeType == node.TEXT_NODE \
-                    or node.nodeType == node.CDATA_SECTION_NODE:
+            if node.nodeType in [node.TEXT_NODE, node.CDATA_SECTION_NODE,
+                                 node.COMMENT_NODE]:
                 rc.append(node.data)
         return ''.join(rc)
 
@@ -104,6 +104,34 @@ class JunitParser(XmlParser):
             system_out = self.get_node(element, 'system-out')
             if system_out is not None:
                 result.failure_reason += self.get_text(system_out.childNodes)
+
+        result.save()
+
+
+class QtTestXunitParser(JunitParser):
+    def create_test_result(self, element, path):
+        result = TestResult.objects.create(launch_id=self.launch_id)
+
+        result.duration = 0
+        result.name = element.getAttribute('name')[:127]
+        result.suite = path[:125]
+        result.state = BLOCKED
+        result.failure_reason = ''
+
+        test_result = element.getAttribute('result')
+        if test_result == 'pass':
+            result.state = PASSED
+        elif test_result == '':
+            result.state = SKIPPED
+            result.failure_reason = self.get_text(element.childNodes)
+        elif test_result == 'fail':
+            result.state = FAILED
+            failure = self.get_node(element, ['failure'])
+            logs = self.get_text(element.childNodes)
+            failure_reason = failure.getAttribute('message')
+            if logs:
+                failure_reason = '{}\n\nLogs:{}'.format(failure_reason, logs)
+            result.failure_reason = failure_reason
 
         result.save()
 
@@ -193,6 +221,8 @@ def xml_parser_func(format, file_content, launch_id, params):
         parser = NunitParser(launch.id)
     elif format == 'junit':
         parser = JunitParser(launch.id)
+    elif format == 'qttestxunit':
+        parser = QtTestXunitParser(launch.id)
 
     parser.load_string(file_content)
     parser.update_duration(launch)

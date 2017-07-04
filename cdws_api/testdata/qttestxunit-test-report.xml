@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite errors="435" failures="2" tests="82" name="QmlUnitTests">
+  <properties>
+    <property value="5.9.0" name="QTestVersion"/>
+    <property value="5.9.0" name="QtVersion"/>
+    <property value="Qt 5.9.0" name="QtBuild"/>
+  </properties>
+  <testcase result="pass" name="passedTest"/>
+  <testcase name="skippedTest">
+    <!-- message="skip reason" type="skip" -->
+  </testcase>
+  <testcase result="fail" name="failedTest">
+    <!-- error log lines -->
+    <failure message="Error message" result="fail"/>
+  </testcase>
+</testsuite>
