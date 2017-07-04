@@ -1564,6 +1564,40 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         self.assertEqual(1, passed['count'])
         self.assertEqual(0.2, launch['duration'])
 
+    def test_upload_qttestxunit_file(self):
+        failed_failure_reason = \
+            'Error message\n\nLogs:\n     error log lines \n    \n  '
+        skipped_failure_reason = \
+            '\n     message="skip reason" type="skip" \n  '
+
+        project = Project.objects.create(name='DummyTestProject')
+        testplan = TestPlan.objects.create(name='DummyTestPlan',
+                                           project=project)
+        self._post(file_name='qttestxunit-test-report.xml',
+                   url='{}/qttestxunit/xunit.xml'.format(testplan.id))
+
+        launches = self._call_rest('get',
+                                   'launches/?testplan={}'.format(testplan.id))
+        self.assertEqual(1, launches['count'])
+        launch = launches['results'][0]
+        failed = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], FAILED))
+        skipped = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], SKIPPED))
+        passed = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], PASSED))
+        self.assertEqual(1, failed['count'])
+        self.assertEqual(failed_failure_reason,
+                         failed["results"][0]["failure_reason"])
+        self.assertEqual(1, skipped['count'])
+        self.assertEqual(skipped_failure_reason,
+                         skipped["results"][0]["failure_reason"])
+        self.assertEqual(1, passed['count'])
+        self.assertEqual(0, launch['duration'])
+
     def test_upload_empty_file(self):
         project = Project.objects.create(name='DummyTestProject')
         testplan = TestPlan.objects.create(name='DummyTestPlan',
