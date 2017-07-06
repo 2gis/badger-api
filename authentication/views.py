@@ -1,4 +1,4 @@
-import json
+# import json
 from django.contrib.auth import authenticate, login, logout
 from rest_framework import status, views
 from rest_framework.response import Response
@@ -52,13 +52,11 @@ class UpdateSettingsView(views.APIView):
 
     def post(self, request):
         if request.user.is_authenticated():
-            decoded_body = request.body.decode('utf-8', errors='replace')
-            if decoded_body is '':
+            if not request.data:
                 return Response({
                     'message': 'Incorrect data in request'
                 }, status=status.HTTP_400_BAD_REQUEST)
-            data = json.loads(decoded_body)
-            for key, value in data.items():
+            for key, value in request.data.items():
                 if hasattr(request.user.settings, key):
                     if key == 'dashboards':
                         request.user.settings.set_dashboards(value)
