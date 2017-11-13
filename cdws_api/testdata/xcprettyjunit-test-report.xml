@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites name='bundle.xctest' tests='2' failures='1'>
+  <testsuite name='bundle.SwitchTests' tests='2' failures='1'>
+    <testcase classname='bundle.SwitchTests' name='test_passed' time='32.502'/>
+    <testcase classname='bundle.SwitchTests' name='test_failed'>
+      <failure message='Failure message'>file_name.swift:94</failure>
+    </testcase>
+    <testcase classname='bundle.SwitchTests' name='test_skipped' time='32.502'>
+        <skipped/>
+    </testcase>
+  </testsuite>
+</testsuites>

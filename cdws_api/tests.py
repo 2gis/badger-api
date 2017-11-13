@@ -1598,6 +1598,36 @@ class ReportFileApiTestCase(AbstractEntityApiTestCase):
         self.assertEqual(1, passed['count'])
         self.assertEqual(0, launch['duration'])
 
+    def test_upload_xcprettyjunit_file(self):
+        failed_failure_reason = 'file_name.swift:94\n\nFailure message'
+
+        project = Project.objects.create(name='DummyTestProject')
+        testplan = TestPlan.objects.create(name='DummyTestPlan',
+                                           project=project)
+        self._post(file_name='xcprettyjunit-test-report.xml',
+                   url='{}/xcprettyjunit/xunit.xml'.format(testplan.id))
+
+        launches = self._call_rest('get',
+                                   'launches/?testplan={}'.format(testplan.id))
+        self.assertEqual(1, launches['count'])
+        launch = launches['results'][0]
+        failed = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], FAILED))
+        skipped = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], SKIPPED))
+        passed = self._call_rest(
+            'get',
+            'testresults/?launch={}&state={}'.format(launch['id'], PASSED))
+        self.assertEqual(1, failed['count'])
+        self.assertEqual(failed_failure_reason,
+                         failed["results"][0]["failure_reason"])
+        self.assertEqual(1, skipped['count'])
+        self.assertEqual('', skipped["results"][0]["failure_reason"])
+        self.assertEqual(1, passed['count'])
+        self.assertEqual(0, launch['duration'])
+
     def test_upload_empty_file(self):
         project = Project.objects.create(name='DummyTestProject')
         testplan = TestPlan.objects.create(name='DummyTestPlan',
