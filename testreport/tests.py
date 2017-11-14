@@ -61,10 +61,10 @@ class TestLaunch(TestCase):
 
     def test_creation(self):
         url = 'http://2gis.local'
-        l = Launch(test_plan=self.tp, started_by=url)
-        l.save()
+        launch = Launch(test_plan=self.tp, started_by=url)
+        launch.save()
         l1 = self.tp.launch_set.first()
-        self.assertEqual(l, l1)
+        self.assertEqual(launch, l1)
         l1.started_by = url
 
 

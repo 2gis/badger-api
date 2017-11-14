@@ -136,6 +136,35 @@ class QtTestXunitParser(JunitParser):
         result.save()
 
 
+class XCPrettyJunitParser(JunitParser):
+    def create_test_result(self, element, path):
+        """
+            https://github.com/supermarin/xcpretty/blob/master/lib/xcpretty/reporters/junit.rb
+        """
+        result = TestResult.objects.create(launch_id=self.launch_id)
+
+        result.duration = 0
+        result.name = element.getAttribute('name')[:127]
+        result.suite = path[:125]
+        result.state = BLOCKED
+        result.failure_reason = ''
+
+        failure = self.get_node(element, ['failure'])
+        skipped = self.get_node(element, ['skipped'])
+        if skipped is not None:
+            result.state = SKIPPED
+        elif failure is not None:
+            result.state = FAILED
+            failure_reason = failure.getAttribute('message')
+            failure_code_line = self.get_text(failure.childNodes)
+            result.failure_reason = "{}\n\n{}".format(failure_code_line,
+                                                      failure_reason)
+        else:
+            result.state = PASSED
+
+        result.save()
+
+
 class NunitParser(XmlParser):
     def parse(self, element, path=''):
         if element.nodeName == 'test-case':
@@ -223,6 +252,8 @@ def xml_parser_func(format, file_content, launch_id, params):
         parser = JunitParser(launch.id)
     elif format == 'qttestxunit':
         parser = QtTestXunitParser(launch.id)
+    elif format == 'xcprettyjunit':
+        parser = XCPrettyJunitParser(launch.id)
 
     parser.load_string(file_content)
     parser.update_duration(launch)
