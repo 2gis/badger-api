@@ -1,5 +1,4 @@
-amqp==2.0.2
-celery==3.1.18
+celery[redis]==3.1.18
 simplejson==3.6.5
 ldap3==2.2.2
 django==1.7.8  # 1.8.2
@@ -11,7 +10,7 @@ django-cors-headers==1.1.0
 django-celery==3.1.16
 dj-database-url==0.3.0
 gunicorn==19.3.0
-psycopg2==2.6
+psycopg2==2.7.4
 requests==2.7.0
 pytz
 psutil==3.2.2
