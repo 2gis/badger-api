@@ -1,3 +1,4 @@
+redis==2.10.6
 celery[redis]==3.1.18
 simplejson==3.6.5
 ldap3==2.2.2
